@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board — SwissMS Recycle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <header class="app-header">
+    <a class="brand" href="index.html">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 18L6 18L8 8L11 20L13 4L15 18L18 12L22 12" stroke="#c8443c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SwissMS Recycle
+    </a>
+    <div class="app-user">
+      <span id="user-email">…</span>
+      <button class="btn btn-ghost btn-sm" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="board-tabs">
+    <button class="board-tab active" data-type="offer">Offered</button>
+    <button class="board-tab" data-type="request">Needed</button>
+  </div>
+
+  <div class="board-layout">
+    <div id="listings">
+      <div class="empty-state">Loading…</div>
+    </div>
+
+    <div class="post-form">
+      <h3>Post to the board</h3>
+      <p class="hint">Visible to everyone logged in.</p>
+
+      <div class="type-toggle" id="post-type-toggle">
+        <button type="button" class="active" data-type="offer">Offer</button>
+        <button type="button" data-type="request">Request</button>
+      </div>
+
+      <form id="post-form">
+        <label for="title">Title</label>
+        <input type="text" id="title" required placeholder="e.g. HPLC column, C18, 2.1mm">
+
+        <label for="description">Details</label>
+        <textarea id="description" rows="3" placeholder="Condition, quantity, expiry, model…"></textarea>
+
+        <label for="lab_name">Lab / platform</label>
+        <input type="text" id="lab_name" required placeholder="e.g. Proteomics Core, Uni Bern">
+
+        <button type="submit" class="btn btn-primary auth-submit">Post</button>
+        <p class="form-msg" id="post-msg"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from './supabase-client.js'
+
+  const listingsEl = document.getElementById('listings')
+  const userEmailEl = document.getElementById('user-email')
+  const signoutBtn = document.getElementById('signout-btn')
+  const boardTabs = document.querySelectorAll('.board-tab')
+  const postTypeToggle = document.getElementById('post-type-toggle')
+  const postForm = document.getElementById('post-form')
+  const postMsg = document.getElementById('post-msg')
+
+  let currentUser = null
+  let activeBoard = 'offer'
+  let postType = 'offer'
+  let allListings = []
+
+  // ---- Auth guard ----
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (!sessionData.session) {
+    window.location.href = 'login.html'
+  } else {
+    currentUser = sessionData.session.user
+    userEmailEl.textContent = currentUser.email
+  }
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (!session) window.location.href = 'login.html'
+  })
+
+  signoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut()
+    window.location.href = 'index.html'
+  })
+
+  // ---- Board tabs ----
+  boardTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      boardTabs.forEach(t => t.classList.remove('active'))
+      tab.classList.add('active')
+      activeBoard = tab.dataset.type
+      renderListings()
+    })
+  })
+
+  // ---- Post form type toggle ----
+  postTypeToggle.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      postTypeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      postType = btn.dataset.type
+    })
+  })
+
+  // ---- Render ----
+  function renderListings() {
+    const items = allListings.filter(i => i.type === activeBoard)
+    if (items.length === 0) {
+      listingsEl.innerHTML = `<div class="empty-state">
+        Nothing ${activeBoard === 'offer' ? 'offered' : 'requested'} yet.
+        Be the first to post on the right.
+      </div>`
+      return
+    }
+    listingsEl.innerHTML = items.map(item => `
+      <div class="listing">
+        <div class="listing-top">
+          <div>
+            <h3>${escapeHtml(item.title)}</h3>
+            ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
+          </div>
+          ${item.user_id === currentUser.id
+            ? `<button class="btn btn-ghost btn-sm" data-remove="${item.id}">Remove</button>`
+            : ''}
+        </div>
+        <div class="listing-meta">
+          <span>${escapeHtml(item.lab_name || '')}</span>
+          <span>${formatDate(item.created_at)}</span>
+        </div>
+      </div>
+    `).join('')
+
+    listingsEl.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => removeListing(btn.dataset.remove))
+    })
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div')
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso)
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })
+  }
+
+  // ---- Data ----
+  async function loadListings() {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      listingsEl.innerHTML = `<div class="empty-state">Could not load the board: ${escapeHtml(error.message)}</div>`
+      return
+    }
+    allListings = data
+    renderListings()
+  }
+
+  async function removeListing(id) {
+    const { error } = await supabase.from('listings').delete().eq('id', id)
+    if (error) alert(error.message)
+  }
+
+  postForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    postMsg.className = 'form-msg'
+    postMsg.textContent = ''
+
+    const title = document.getElementById('title').value.trim()
+    const description = document.getElementById('description').value.trim()
+    const lab_name = document.getElementById('lab_name').value.trim()
+
+    const { error } = await supabase.from('listings').insert({
+      title,
+      description,
+      lab_name,
+      type: postType,
+      user_id: currentUser.id,
+    })
+
+    if (error) {
+      postMsg.className = 'form-msg error'
+      postMsg.textContent = error.message
+    } else {
+      postForm.reset()
+      postMsg.className = 'form-msg ok'
+      postMsg.textContent = 'Posted.'
+      setTimeout(() => { postMsg.textContent = '' }, 2500)
+    }
+  })
+
+  // ---- Realtime ----
+  supabase
+    .channel('listings-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, loadListings)
+    .subscribe()
+
+  loadListings()
+</script>
+
+</body>
+</html>
