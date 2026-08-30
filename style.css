@@ -70,10 +70,34 @@ a { color: inherit; }
   color: var(--ink);
 }
 
-.brand .mark {
-  display: inline-block;
-  width: 22px;
-  height: 22px;
+.logo-mark {
+  display: block;
+}
+
+.logo-mark--sm {
+  width: 28px;
+  height: auto;
+}
+
+.logo-mark--lg {
+  width: 128px;
+  height: auto;
+  margin: 0 auto 24px;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-pill {
+  border-radius: 999px;
 }
 
 .nav-links {
@@ -137,7 +161,11 @@ a { color: inherit; }
 
 /* ---------- Hero ---------- */
 .hero {
-  padding: 64px 0 40px;
+  padding: 56px 0 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .eyebrow {
@@ -158,21 +186,22 @@ h1 {
   font-size: clamp(32px, 5vw, 48px);
   line-height: 1.08;
   letter-spacing: -0.02em;
-  margin: 0 0 20px;
-  max-width: 14ch;
+  margin: 0 auto 20px;
+  max-width: 16ch;
 }
 
 .lede {
   font-size: 18px;
   color: var(--ink-soft);
   max-width: 46ch;
-  margin: 0 0 32px;
+  margin: 0 auto 32px;
 }
 
 .hero-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* Signature element: spectrum trace */
@@ -287,13 +316,15 @@ h1 {
 .auth-card h1 {
   font-size: 22px;
   max-width: none;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  text-align: center;
 }
 
 .auth-sub {
   color: var(--ink-soft);
   font-size: 14px;
   margin: 0 0 24px;
+  text-align: center;
 }
 
 .tabs {
