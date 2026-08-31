@@ -89,7 +89,7 @@ a { color: inherit; }
   height: 130px;
   width: auto;
   margin-top: 148px;
-  margin-left: -18px;
+  margin-left: -55px;
   display: block;
 }
 
@@ -113,6 +113,21 @@ a { color: inherit; }
   width: 360px;
   height: auto;
   margin: 0 auto 24px;
+}
+
+.brand-lean-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.brand-lean-figure {
+  position: absolute;
+  left: -10px;
+  bottom: -8px;
+  height: 58px;
+  width: auto;
+  transform: scaleX(-1);
+  pointer-events: none;
 }
 
 .cap {
