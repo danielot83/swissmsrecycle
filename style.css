@@ -72,6 +72,34 @@ a { color: inherit; }
   color: var(--ink);
 }
 
+.hero-figure {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.person-photo {
+  height: 300px;
+  width: auto;
+  display: block;
+}
+
+.tof-mark {
+  height: 130px;
+  width: auto;
+  margin-top: 148px;
+  margin-left: -18px;
+  display: block;
+}
+
+.hero-figure--sm {
+  transform: scale(0.42);
+  transform-origin: top center;
+  margin-bottom: -100px;
+  margin-top: -20px;
+}
+
 .logo-mark {
   display: block;
 }
