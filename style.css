@@ -88,16 +88,40 @@ a { color: inherit; }
 
 .brand {
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  gap: 6px;
 }
 
 .cap {
   color: var(--accent);
 }
 
-.hero-bg {
+.highlight-circle {
+  position: absolute;
+  top: -0.6em;
+  left: -0.45em;
+  width: calc(100% + 0.9em);
+  height: calc(100% + 1.15em);
+  pointer-events: none;
+}
+
+.page {
   position: relative;
   overflow: hidden;
+}
+
+.side-ions {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-bg {
+  position: relative;
   background:
     radial-gradient(ellipse 60% 50% at 25% 15%, rgba(200, 68, 60, 0.10), transparent 60%),
     radial-gradient(ellipse 55% 45% at 78% 55%, rgba(27, 122, 120, 0.09), transparent 60%),
@@ -107,16 +131,6 @@ a { color: inherit; }
 .hero-bg .container {
   position: relative;
   z-index: 1;
-}
-
-.side-ions {
-  position: absolute;
-  left: -10px;
-  top: 0;
-  height: 100%;
-  width: auto;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .nav-actions {
