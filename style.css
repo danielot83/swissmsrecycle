@@ -76,12 +76,12 @@ a { color: inherit; }
 }
 
 .logo-mark--sm {
-  width: 28px;
+  width: 32px;
   height: auto;
 }
 
 .logo-mark--lg {
-  width: 128px;
+  width: 160px;
   height: auto;
   margin: 0 auto 24px;
 }
@@ -89,6 +89,34 @@ a { color: inherit; }
 .brand {
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.cap {
+  color: var(--accent);
+}
+
+.hero-bg {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 50% at 25% 15%, rgba(200, 68, 60, 0.10), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 78% 55%, rgba(27, 122, 120, 0.09), transparent 60%),
+    var(--paper);
+}
+
+.hero-bg .container {
+  position: relative;
+  z-index: 1;
+}
+
+.side-ions {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .nav-actions {
@@ -200,10 +228,10 @@ h1 {
 
 .highlight-circle {
   position: absolute;
-  top: -0.32em;
-  left: -0.14em;
-  width: calc(100% + 0.3em);
-  height: calc(100% + 0.5em);
+  top: -0.45em;
+  left: -0.3em;
+  width: calc(100% + 0.6em);
+  height: calc(100% + 0.85em);
   pointer-events: none;
 }
 
