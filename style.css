@@ -105,16 +105,6 @@ a { color: inherit; }
   overflow: hidden;
 }
 
-.side-ions {
-  position: absolute;
-  left: -10px;
-  top: 0;
-  width: 80px;
-  height: 1280px;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .hero-bg {
   position: relative;
   background:
@@ -269,6 +259,8 @@ h1 {
 /* ---------- How it works ---------- */
 .section-divider {
   height: 24px;
+  width: 33%;
+  margin: 0 auto;
   overflow: visible;
   position: relative;
   z-index: 2;

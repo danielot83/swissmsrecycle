@@ -9,29 +9,6 @@
 <body>
 
 <div class="page">
-  <svg class="side-ions" viewBox="0 0 80 1280" width="80" height="1280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <linearGradient id="ion-trail-grad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--accent)"/>
-        <stop offset="35%" stop-color="var(--offer)"/>
-        <stop offset="70%" stop-color="var(--ink-soft)"/>
-        <stop offset="100%" stop-color="var(--line)"/>
-      </linearGradient>
-    </defs>
-    <path id="left-ion-path" d="M65 -10 L15 55 L65 120 L15 185 L65 250 L15 315 L65 380 L15 445 L65 510 L15 575 L65 640 L15 705 L65 770 L15 835 L65 900 L15 965 L65 1030 L15 1095 L65 1160 L15 1225"
-      fill="none" stroke="url(#ion-trail-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" vector-effect="non-scaling-stroke"/>
-    <circle r="3" fill="var(--accent)">
-      <animateMotion dur="18s" repeatCount="indefinite">
-        <mpath href="#left-ion-path"/>
-      </animateMotion>
-    </circle>
-    <circle r="3" fill="var(--offer)">
-      <animateMotion dur="18s" begin="-9s" repeatCount="indefinite">
-        <mpath href="#left-ion-path"/>
-      </animateMotion>
-    </circle>
-  </svg>
-
   <div class="hero-bg">
     <div class="container">
       <nav class="nav">
@@ -48,20 +25,20 @@
           <line x1="17.2" y1="16" x2="18.8" y2="16" stroke="var(--ink)" stroke-width="0.9"/>
           <path d="M15 20 Q18 22.5 21 20" stroke="var(--ink)" stroke-width="0.9" stroke-linecap="round" fill="none"/>
           <path d="M12 30 L18 38 L24 30" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <path d="M26 44 Q38 33 50 42" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M26 44 L38 36 L38 53" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="38" cy="55" r="1.8" fill="var(--ink)"/>
           <path d="M9 55 Q4 59 8 64" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
           <path d="M8 92 L8 44 Q8 30 18 30 Q28 30 28 44 L28 92" stroke="var(--ink)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           <line x1="18" y1="40" x2="18" y2="90" stroke="var(--ink)" stroke-width="1"/>
           <rect x="14.5" y="55" width="7" height="7" rx="1.5" fill="var(--accent)"/>
           <rect x="17.3" y="56.3" width="1.4" height="4.4" fill="#fff"/>
           <rect x="15.8" y="57.8" width="4.4" height="1.4" fill="#fff"/>
-          <rect x="44" y="42" width="56" height="18" rx="2" stroke="var(--ink)" stroke-width="1.7"/>
-          <rect x="100" y="16" width="48" height="70" rx="2" stroke="var(--ink)" stroke-width="1.7"/>
-          <circle cy="51" r="2.6" fill="var(--accent)"><animateMotion path="M50 0 L96 0" dur="1.2s" repeatCount="indefinite"/></circle>
-          <circle cy="51" r="2.2" fill="var(--offer)"><animateMotion path="M50 0 L96 0" dur="1.6s" repeatCount="indefinite"/></circle>
-          <circle cy="51" r="1.8" fill="var(--ion-blue)"><animateMotion path="M50 0 L96 0" dur="2s" repeatCount="indefinite"/></circle>
-          <circle r="2.6" fill="var(--accent)"><animateMotion path="M104 80 L116 22 L128 80 L140 22 L146 80" dur="2.2s" repeatCount="indefinite"/></circle>
-          <circle r="2.2" fill="var(--offer)"><animateMotion path="M104 80 L116 22 L128 80 L140 22 L146 80" dur="2.6s" begin="-0.7s" repeatCount="indefinite"/></circle></svg>
+          <rect x="40" y="40" width="74" height="16" stroke="var(--ink)" stroke-width="1.7"/>
+          <rect x="114" y="10" width="40" height="76" stroke="var(--ink)" stroke-width="1.7"/>
+          <path id="tof-path" d="M44 50 Q54 46 60 50 Q66 54 72 50 Q78 46 84 50 Q90 54 96 50 Q102 46 108 50 L114 50 L126 18 L136 42 L146 18 L150 74" stroke="var(--ink-soft)" stroke-width="1" opacity="0.4"/>
+          <circle r="2.6" fill="var(--accent)"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#tof-path"/></animateMotion></circle>
+          <circle r="2.2" fill="var(--offer)"><animateMotion dur="3s" begin="-1s" repeatCount="indefinite"><mpath href="#tof-path"/></animateMotion></circle>
+          <circle r="1.8" fill="var(--ion-blue)"><animateMotion dur="3s" begin="-2s" repeatCount="indefinite"><mpath href="#tof-path"/></animateMotion></circle></svg>
         <span class="eyebrow">Created by the Swiss MS community</span>
         <h1>Share what your lab can spare,<br>find what's <span class="highlight"><svg class="highlight-circle" viewBox="0 0 140 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 34 Q4 10 40 8 Q90 4 128 16 Q136 30 118 42 Q80 56 40 50 Q6 46 8 34 Z" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></svg>missing</span>.</h1>
         <p class="lede">
@@ -80,17 +57,11 @@
 
   <div class="section-divider">
     <svg width="100%" height="40" viewBox="0 0 1000 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="divider-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="var(--accent)"/>
-          <stop offset="50%" stop-color="var(--offer)"/>
-          <stop offset="100%" stop-color="var(--line)"/>
-        </linearGradient>
-      </defs>
       <path id="divider-path" d="M-10 6 L45 6 L100 34 L155 6 L210 34 L265 6 L320 34 L375 6 L430 34 L485 6 L540 34 L595 6 L650 34 L705 6 L760 34 L815 6 L870 34 L925 6 L980 34"
-        fill="none" stroke="url(#divider-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        fill="none" stroke="none"/>
       <circle r="5" fill="var(--accent)"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#divider-path"/></animateMotion></circle>
-      <circle r="5" fill="var(--offer)"><animateMotion dur="6s" begin="-3s" repeatCount="indefinite"><mpath href="#divider-path"/></animateMotion></circle>
+      <circle r="5" fill="var(--offer)"><animateMotion dur="6s" begin="-2s" repeatCount="indefinite"><mpath href="#divider-path"/></animateMotion></circle>
+      <circle r="5" fill="var(--ion-blue)"><animateMotion dur="6s" begin="-4s" repeatCount="indefinite"><mpath href="#divider-path"/></animateMotion></circle>
     </svg>
   </div>
 
