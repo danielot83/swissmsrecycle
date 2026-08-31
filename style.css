@@ -83,6 +83,8 @@ a { color: inherit; }
   height: 300px;
   width: auto;
   display: block;
+  position: relative;
+  z-index: 2;
 }
 
 .tof-mark {
@@ -91,6 +93,8 @@ a { color: inherit; }
   margin-top: 148px;
   margin-left: -55px;
   display: block;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-figure--sm {
@@ -122,12 +126,18 @@ a { color: inherit; }
 
 .brand-lean-figure {
   position: absolute;
-  left: -10px;
-  bottom: -8px;
-  height: 58px;
+  left: -4px;
+  bottom: -6px;
+  height: 42px;
   width: auto;
   transform: scaleX(-1);
   pointer-events: none;
+  z-index: 0;
+}
+
+.brand-word {
+  position: relative;
+  z-index: 1;
 }
 
 .cap {
