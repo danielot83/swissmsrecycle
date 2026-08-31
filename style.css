@@ -109,7 +109,7 @@ a { color: inherit; }
   left: -10px;
   top: 0;
   width: 80px;
-  height: 2200px;
+  height: 1280px;
   pointer-events: none;
   z-index: 0;
 }
@@ -268,7 +268,9 @@ h1 {
 /* ---------- How it works ---------- */
 .section-divider {
   height: 3px;
-  background: linear-gradient(to right, var(--accent), var(--offer), var(--line));
+  overflow: visible;
+  position: relative;
+  z-index: 2;
 }
 
 .section {
