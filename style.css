@@ -62,11 +62,11 @@ a { color: inherit; }
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   text-decoration: none;
   color: var(--ink);
 }
@@ -84,12 +84,6 @@ a { color: inherit; }
   width: 180px;
   height: auto;
   margin: 0 auto 24px;
-}
-
-.brand {
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  gap: 6px;
 }
 
 .cap {
@@ -272,9 +266,19 @@ h1 {
 }
 
 /* ---------- How it works ---------- */
+.section-divider {
+  height: 3px;
+  background: linear-gradient(to right, var(--accent), var(--offer), var(--line));
+}
+
 .section {
   padding: 40px 0;
   border-top: 1px solid var(--line);
+}
+
+.section--noborder {
+  border-top: none;
+  padding-top: 32px;
 }
 
 .section-head {
