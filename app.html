@@ -38,19 +38,19 @@
     <p class="app-hero-text">Browse what labs nearby are giving away or looking for, or post your own.</p>
   </div>
 
+  <div class="app-primary-action">
+    <button class="btn btn-accent app-primary-btn" id="open-post-btn">Offer or request something</button>
+  </div>
+
   <div class="app-tabs">
-    <button class="app-tab active" data-view="browse">See what's available</button>
-    <button class="app-tab" data-view="post">Offer or request something</button>
+    <button class="app-tab active" data-view="available">See what's available</button>
+    <button class="app-tab" data-view="needed">See what's needed</button>
+    <button class="app-tab" data-view="history">See past exchanges</button>
   </div>
 
   <!-- ============ BROWSE VIEW ============ -->
   <section id="view-browse" class="app-view">
     <div class="filters">
-      <select id="f-type">
-        <option value="">All types</option>
-        <option value="offer">Offered</option>
-        <option value="request">Requested</option>
-      </select>
       <select id="f-category">
         <option value="">All categories</option>
         <option value="Instrument">Instrument</option>
@@ -84,6 +84,13 @@
 
     <div id="listings-grid" class="listings-grid">
       <div class="empty-state">Loading…</div>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY VIEW ============ -->
+  <section id="view-history" class="app-view" style="display:none;">
+    <div id="history-list" class="listings-grid">
+      <p class="empty-state">Loading…</p>
     </div>
   </section>
 
@@ -163,10 +170,13 @@
             <input type="text" id="organization" placeholder="e.g. Proteomics Core, Uni Bern">
           </div>
           <div>
-            <label for="contact_email">Contact email</label>
-            <input type="email" id="contact_email" placeholder="name@institution.ch">
+            <label for="inventory_number">Inventory number (optional)</label>
+            <input type="text" id="inventory_number" placeholder="e.g. INV-2024-0113">
           </div>
         </div>
+
+        <label for="contact_email">Contact email</label>
+        <input type="email" id="contact_email" placeholder="name@institution.ch">
 
         <label for="photo">Photo (optional — auto-cropped to a 300×300 square)</label>
         <input type="file" id="photo" accept="image/*">
@@ -193,7 +203,9 @@
   const signoutBtn = document.getElementById('signout-btn')
   const appTabs = document.querySelectorAll('.app-tab')
   const viewBrowse = document.getElementById('view-browse')
+  const viewHistory = document.getElementById('view-history')
   const viewPost = document.getElementById('view-post')
+  let currentTypeFilter = 'offer' // matches the initially-active "See what's available" tab
 
   let currentUser = null
   let currentProfile = null
@@ -225,16 +237,20 @@
     document.getElementById('organization').value = currentProfile.organization
   }
 
-  // ---- Top-level tabs ----
+  // ---- Top-level navigation: 3 view tabs + 1 primary "post" action ----
   function showView(view) {
     appTabs.forEach(t => t.classList.toggle('active', t.dataset.view === view))
-    viewBrowse.style.display = view === 'browse' ? 'block' : 'none'
+    viewBrowse.style.display = (view === 'available' || view === 'needed') ? 'block' : 'none'
+    viewHistory.style.display = view === 'history' ? 'block' : 'none'
     viewPost.style.display = view === 'post' ? 'block' : 'none'
+    if (view === 'available') { currentTypeFilter = 'offer'; renderGrid() }
+    if (view === 'needed') { currentTypeFilter = 'request'; renderGrid() }
   }
   appTabs.forEach(tab => {
     tab.addEventListener('click', () => showView(tab.dataset.view))
   })
-  document.getElementById('post-close-btn').addEventListener('click', () => showView('browse'))
+  document.getElementById('open-post-btn').addEventListener('click', () => showView('post'))
+  document.getElementById('post-close-btn').addEventListener('click', () => showView('available'))
 
   // ---- Brand/model catalog, researched per category ----
   // Each category maps to brands; each brand maps to real model names
@@ -279,7 +295,6 @@
 
 
   const grid = document.getElementById('listings-grid')
-  const fType = document.getElementById('f-type')
   const fCategory = document.getElementById('f-category')
   const fBrand = document.getElementById('f-brand')
   const fModel = document.getElementById('f-model')
@@ -337,7 +352,7 @@
 
   function applyFilters(items) {
     return items.filter(item => {
-      if (fType.value && item.type !== fType.value) return false
+      if (currentTypeFilter && item.type !== currentTypeFilter) return false
       if (fCategory.value && item.category !== fCategory.value) return false
       if (fBrand.value && item.brand !== fBrand.value) return false
       if (fModel.value && item.model !== fModel.value) return false
@@ -400,9 +415,49 @@
     renderGrid()
   }
 
-  ;[fType, fCategory, fBrand, fModel, fCondition, fOrg].forEach(sel => sel.addEventListener('change', renderGrid))
+  async function loadHistory() {
+    const historyList = document.getElementById('history-list')
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'closed')
+      .not('claimed_by', 'is', null)
+      .order('claimed_at', { ascending: false })
+      .limit(12)
+
+    if (error || !data || data.length === 0) {
+      historyList.innerHTML = `<p class="empty-state">Nothing given away yet.</p>`
+      return
+    }
+    historyList.innerHTML = `
+      <div class="listing-row listing-row--head">
+        <span></span>
+        <span>Type</span>
+        <span>Item</span>
+        <span>Went to</span>
+        <span>When</span>
+      </div>
+    ` + data.map(item => `
+      <div class="listing-row listing-row--static">
+        <div class="listing-row-photo">
+          ${item.photo_url
+            ? `<img src="${item.photo_url}" alt="">`
+            : `<div class="listing-row-photo-placeholder">${item.type === 'offer' ? '📦' : '🔍'}</div>`}
+        </div>
+        <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+        <div class="listing-row-title">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="listing-row-sub">${[item.category, [item.brand, item.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</span>
+        </div>
+        <div class="listing-row-org">${escapeHtml(item.claimed_by)}</div>
+        <div class="listing-row-condition">${formatDate(item.claimed_at)}</div>
+      </div>
+    `).join('')
+  }
+
+  ;[fCategory, fBrand, fModel, fCondition, fOrg].forEach(sel => sel.addEventListener('change', renderGrid))
   clearFiltersBtn.addEventListener('click', () => {
-    fType.value = ''; fCategory.value = ''; fBrand.value = ''; fModel.value = ''; fCondition.value = ''; fOrg.value = ''
+    fCategory.value = ''; fBrand.value = ''; fModel.value = ''; fCondition.value = ''; fOrg.value = ''
     renderGrid()
   })
 
@@ -431,15 +486,22 @@
         ${item.location ? `<dt>Location</dt><dd>${escapeHtml(item.location)}</dd>` : ''}
         ${item.organization ? `<dt>Lab / university</dt><dd>${escapeHtml(item.organization)}</dd>` : ''}
         ${item.construction_year ? `<dt>Year built</dt><dd>${escapeHtml(String(item.construction_year))}</dd>` : ''}
+        ${item.inventory_number ? `<dt>Inventory #</dt><dd>${escapeHtml(item.inventory_number)}</dd>` : ''}
         <dt>Posted</dt><dd>${formatDate(item.created_at)}</dd>
       </dl>
       <div class="modal-actions">
         <a href="${mailto}" class="btn btn-accent btn-sm">Send email</a>
         <button class="btn btn-ghost btn-sm" id="copy-email-btn">Copy email</button>
         ${item.user_id !== currentUser.id ? `<button class="btn btn-ghost btn-sm" id="ask-available-btn">Still available? Ask</button>` : ''}
+        ${item.user_id === currentUser.id ? `<button class="btn btn-ghost btn-sm" id="mark-given-btn">Mark as given away</button>` : ''}
         ${item.user_id === currentUser.id ? `<button class="btn btn-ghost btn-sm" id="remove-listing-btn">Remove listing</button>` : ''}
       </div>
       <p class="listing-inquiry-count" id="inquiry-count">${item.inquiry_count ? `Asked ${item.inquiry_count} time${item.inquiry_count === 1 ? '' : 's'} so far` : ''}</p>
+      <div id="mark-given-form" style="display:none;">
+        <label for="claimed-by-input">Who took it?</label>
+        <input type="text" id="claimed-by-input" placeholder="e.g. Proteomics Core, Uni Bern">
+        <button class="btn btn-primary btn-sm" id="confirm-given-btn" type="button">Confirm</button>
+      </div>
       <p class="form-msg" id="modal-msg"></p>
     `
 
@@ -460,6 +522,28 @@
         document.getElementById('inquiry-count').textContent = `Asked ${item.inquiry_count} time${item.inquiry_count === 1 ? '' : 's'} so far`
       }
       window.location.href = mailto + '&body=' + encodeURIComponent('Hi, is this still available?')
+    })
+
+    document.getElementById('mark-given-btn')?.addEventListener('click', () => {
+      document.getElementById('mark-given-form').style.display = 'block'
+      document.getElementById('claimed-by-input').focus()
+    })
+
+    document.getElementById('confirm-given-btn')?.addEventListener('click', async () => {
+      const claimedBy = document.getElementById('claimed-by-input').value.trim()
+      if (!claimedBy) return
+      const { error } = await supabase.from('listings').update({
+        status: 'closed',
+        claimed_by: claimedBy,
+        claimed_at: new Date().toISOString()
+      }).eq('id', item.id)
+      if (!error) {
+        modal.style.display = 'none'
+        loadListings()
+        loadHistory()
+      } else {
+        document.getElementById('modal-msg').textContent = error.message
+      }
     })
 
     document.getElementById('remove-listing-btn')?.addEventListener('click', async () => {
@@ -589,6 +673,7 @@
         organization: document.getElementById('organization').value.trim(),
         contact_email: document.getElementById('contact_email').value.trim(),
         construction_year: document.getElementById('construction_year').value || null,
+        inventory_number: document.getElementById('inventory_number').value.trim() || null,
         photo_url
       })
       if (error) throw error
@@ -599,7 +684,7 @@
       postMsg.className = 'form-msg ok'
       postMsg.textContent = 'Posted to the board.'
       loadListings()
-      setTimeout(() => showView('browse'), 700)
+      setTimeout(() => showView('available'), 700)
     } catch (err) {
       postMsg.className = 'form-msg error'
       postMsg.textContent = err.message || 'Something went wrong.'
@@ -609,10 +694,11 @@
   // ---- Realtime ----
   supabase
     .channel('listings-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, loadListings)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => { loadListings(); loadHistory() })
     .subscribe()
 
   loadListings()
+  loadHistory()
 </script>
 
 </body>

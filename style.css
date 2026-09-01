@@ -566,18 +566,28 @@ input:focus, textarea:focus, select:focus {
   margin: 0 0 4px;
 }
 
+.app-primary-action {
+  margin: 28px 0 12px;
+}
+
+.app-primary-btn {
+  padding: 13px 22px;
+  font-size: 15px;
+  border-radius: 999px;
+}
+
 .app-tabs {
   display: flex;
   gap: 8px;
-  margin: 28px 0 20px;
+  margin: 0 0 20px;
 }
 
 .app-tab {
-  padding: 10px 18px;
+  padding: 9px 16px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--paper-raised);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   color: var(--ink-soft);
@@ -594,13 +604,23 @@ input:focus, textarea:focus, select:focus {
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
 .filters select {
   width: auto;
-  min-width: 140px;
+  min-width: 0;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.filters .btn-sm {
+  flex-shrink: 0;
+}
+
+.listing-row--static {
+  cursor: default;
 }
 
 /* ---------- Listings table ---------- */
@@ -832,6 +852,16 @@ input[type="file"] {
   font-size: 11px;
   color: var(--ink-soft);
   margin: 10px 0 0;
+}
+
+#mark-given-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+#mark-given-form label {
+  margin-top: 0;
 }
 
 .post-close {
