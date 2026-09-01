@@ -30,9 +30,9 @@
         <circle r="4" cy="50" fill="var(--ion-blue)"><animateMotion path="M15 0 L85 0" dur="1.6s" begin="-1s" repeatCount="indefinite"/></circle>
       </svg>
       <svg class="ion-overlay ion-overlay--tower" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle r="3.2" fill="var(--accent)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 68" dur="2s" repeatCount="indefinite"/></circle>
-        <circle r="2.7" fill="var(--offer)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 68" dur="2s" begin="-0.7s" repeatCount="indefinite"/></circle>
-        <circle r="2.2" fill="var(--ion-blue)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 68" dur="2s" begin="-1.4s" repeatCount="indefinite"/></circle>
+        <circle r="3.2" fill="var(--accent)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 28" dur="2s" repeatCount="indefinite"/></circle>
+        <circle r="2.7" fill="var(--offer)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 28" dur="2s" begin="-0.7s" repeatCount="indefinite"/></circle>
+        <circle r="2.2" fill="var(--ion-blue)"><animateMotion path="M70 96 L70 22 Q70 4 20 4 L20 28" dur="2s" begin="-1.4s" repeatCount="indefinite"/></circle>
       </svg>
     </div>
     <p class="app-hero-text">Browse what labs nearby are giving away or looking for, or post your own.</p>
@@ -63,14 +63,6 @@
       </select>
       <select id="f-brand">
         <option value="">All brands</option>
-        <option value="Waters">Waters</option>
-        <option value="Thermo Fisher">Thermo Fisher</option>
-        <option value="Agilent">Agilent</option>
-        <option value="Bruker">Bruker</option>
-        <option value="Sciex">Sciex</option>
-        <option value="Shimadzu">Shimadzu</option>
-        <option value="Bio-Rad">Bio-Rad</option>
-        <option value="Other">Other</option>
       </select>
       <select id="f-model">
         <option value="">All models</option>
@@ -98,6 +90,7 @@
   <!-- ============ POST VIEW ============ -->
   <section id="view-post" class="app-view" style="display:none;">
     <div class="post-card">
+      <button type="button" class="modal-close post-close" id="post-close-btn" title="Close">×</button>
       <div class="type-toggle" id="post-type-toggle">
         <button type="button" class="active" data-type="offer">I have something to offer</button>
         <button type="button" data-type="request">I'm looking for something</button>
@@ -139,19 +132,14 @@
             <label for="brand">Brand</label>
             <select id="brand">
               <option value="">—</option>
-              <option value="Waters">Waters</option>
-              <option value="Thermo Fisher">Thermo Fisher</option>
-              <option value="Agilent">Agilent</option>
-              <option value="Bruker">Bruker</option>
-              <option value="Sciex">Sciex</option>
-              <option value="Shimadzu">Shimadzu</option>
-              <option value="Bio-Rad">Bio-Rad</option>
-              <option value="Other">Other</option>
             </select>
           </div>
           <div>
             <label for="model">Model</label>
-            <input type="text" id="model" placeholder="e.g. Xevo G2-XS">
+            <select id="model" style="display:none;">
+              <option value="">—</option>
+            </select>
+            <input type="text" id="model-text" placeholder="e.g. Xevo G2-XS">
           </div>
         </div>
 
@@ -238,17 +226,58 @@
   }
 
   // ---- Top-level tabs ----
+  function showView(view) {
+    appTabs.forEach(t => t.classList.toggle('active', t.dataset.view === view))
+    viewBrowse.style.display = view === 'browse' ? 'block' : 'none'
+    viewPost.style.display = view === 'post' ? 'block' : 'none'
+  }
   appTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      appTabs.forEach(t => t.classList.remove('active'))
-      tab.classList.add('active')
-      const view = tab.dataset.view
-      viewBrowse.style.display = view === 'browse' ? 'block' : 'none'
-      viewPost.style.display = view === 'post' ? 'block' : 'none'
-    })
+    tab.addEventListener('click', () => showView(tab.dataset.view))
   })
+  document.getElementById('post-close-btn').addEventListener('click', () => showView('browse'))
 
-  // ============ BROWSE ============
+  // ---- Brand/model catalog, researched per category ----
+  // Each category maps to brands; each brand maps to real model names
+  // where we could find them. "Other" is always available so people
+  // can type in anything not on the list.
+  const CATALOG = {
+    'Instrument': {
+      'Waters': ['Xevo TQ-S', 'Xevo TQ-XS', 'Xevo TQ Absolute', 'Xevo G2-XS QTof', 'Xevo G3 QTof', 'Xevo MRT', 'SYNAPT G2-Si', 'SYNAPT XS', 'Vion IMS QTof', 'ACQUITY QDa', 'BioAccord', 'Other'],
+      'Thermo Fisher': ['Orbitrap Exploris 120', 'Orbitrap Exploris 240', 'Orbitrap Exploris 480', 'Q Exactive', 'Q Exactive Plus', 'Q Exactive HF', 'Q Exactive HF-X', 'Orbitrap Fusion', 'Orbitrap Fusion Lumos', 'Orbitrap Eclipse', 'Orbitrap IQ-X', 'Orbitrap Ascend', 'Orbitrap Astral', 'TSQ Altis', 'TSQ Quantis', 'TSQ Endura', 'LTQ', 'Other'],
+      'Agilent': ['6470 Triple Quad', '6475 Triple Quad', '6490 Triple Quad', '6495 Triple Quad', '6495C Triple Quad', '6495D Triple Quad', '6230 TOF', '6530 Q-TOF', '6545 Q-TOF', '6546 Q-TOF', '6550 Q-TOF', '6560 IM-QTOF', '7010 Triple Quad GC/MS', '7250 GC/Q-TOF', 'Ultivo', 'Other'],
+      'Bruker': ['timsTOF Pro', 'timsTOF Pro 2', 'timsTOF HT', 'timsTOF Ultra', 'timsTOF SCP', 'timsTOF fleX', 'impact II', 'maXis II', 'solariX', 'scimaX', 'rapifleX MALDI', 'autoflex', 'microflex', 'amaZon speed', 'Other'],
+      'AB Sciex': ['Triple Quad 3500', 'Triple Quad 5500', 'Triple Quad 6500', 'Triple Quad 6500+', 'Triple Quad 7500', 'QTRAP 4500', 'QTRAP 5500', 'QTRAP 6500', 'QTRAP 6500+', 'X500 QTOF', 'X500B', 'X500R', 'ZenoTOF 7600', 'TripleTOF 6600', 'Other'],
+      'Shimadzu': ['LCMS-8040', 'LCMS-8045', 'LCMS-8050', 'LCMS-8060', 'LCMS-9030', 'LCMS-2020', 'LCMS-2050', 'AXIMA MALDI', 'Other'],
+      'PerkinElmer': [],
+      'JEOL': [],
+      'Other': []
+    },
+    'Column': {
+      'Waters': ['ACQUITY UPLC BEH C18', 'ACQUITY UPLC BEH C8', 'ACQUITY UPLC HSS T3', 'ACQUITY UPLC CSH', 'XTerra', 'Symmetry C18', 'Atlantis', 'Nova-Pak', 'CORTECS', 'Other'],
+      'Agilent': ['ZORBAX Eclipse XDB-C18', 'ZORBAX Eclipse Plus C18', 'ZORBAX SB-C18', 'ZORBAX StableBond', 'InfinityLab Poroshell 120', 'Other'],
+      'Phenomenex': ['Luna C18', 'Luna Omega', 'Kinetex C18', 'Kinetex XB-C18', 'Synergi', 'Gemini', 'Other'],
+      'Thermo Fisher': ['Hypersil GOLD', 'Accucore', 'Acclaim', 'Hypersil BDS', 'Other'],
+      'Merck / Sigma-Aldrich': ['LiChrospher', 'LiChroCART', 'Ascentis Express', 'Supelcosil', 'Other'],
+      'Restek': ['Raptor', 'Allure', 'Other'],
+      'Macherey-Nagel': ['Nucleosil', 'Nucleodur', 'Other'],
+      'YMC': ['YMC-Triart', 'YMC Pro C18', 'Other'],
+      'Other': []
+    }
+  }
+  // Categories without a curated brand list fall back to this shared
+  // set of common instrument vendors (spare parts, consumables, and
+  // standards are usually tied to one of these).
+  const DEFAULT_BRANDS = ['Waters', 'Thermo Fisher', 'Agilent', 'Bruker', 'AB Sciex', 'Shimadzu', 'PerkinElmer', 'JEOL', 'Bio-Rad', 'Other']
+
+  function brandsForCategory(category) {
+    if (CATALOG[category]) return Object.keys(CATALOG[category])
+    return DEFAULT_BRANDS
+  }
+  function modelsForBrand(category, brand) {
+    return CATALOG[category]?.[brand] || null // null = no curated list, use free text
+  }
+
+
   const grid = document.getElementById('listings-grid')
   const fType = document.getElementById('f-type')
   const fCategory = document.getElementById('f-category')
@@ -269,6 +298,31 @@
       }
     })
   }
+
+  // replaces all options (used for cascading selects, where the old
+  // options are no longer valid once the parent selection changes)
+  function replaceOptions(select, values, placeholderLabel) {
+    select.innerHTML = ''
+    const placeholder = document.createElement('option')
+    placeholder.value = ''
+    placeholder.textContent = placeholderLabel
+    select.appendChild(placeholder)
+    values.forEach(v => {
+      const opt = document.createElement('option')
+      opt.value = v
+      opt.textContent = v
+      select.appendChild(opt)
+    })
+  }
+
+  // filter: category -> brand cascades
+  function refreshFilterBrands() {
+    const cat = fCategory.value
+    const brands = cat ? brandsForCategory(cat) : [...new Set([...Object.keys(CATALOG.Instrument), ...Object.keys(CATALOG.Column), ...DEFAULT_BRANDS])]
+    replaceOptions(fBrand, brands.sort(), 'All brands')
+  }
+  fCategory.addEventListener('change', () => { refreshFilterBrands(); renderGrid() })
+  refreshFilterBrands()
 
   function escapeHtml(str) {
     const div = document.createElement('div')
@@ -299,27 +353,33 @@
       grid.innerHTML = `<div class="empty-state">Nothing matches those filters yet.</div>`
       return
     }
-    grid.innerHTML = items.map(item => `
-      <div class="listing-card" data-id="${item.id}">
-        <div class="listing-card-photo">
+    grid.innerHTML = `
+      <div class="listing-row listing-row--head">
+        <span></span>
+        <span>Type</span>
+        <span>Item</span>
+        <span>Lab / university</span>
+        <span>Condition</span>
+      </div>
+    ` + items.map(item => `
+      <div class="listing-row" data-id="${item.id}">
+        <div class="listing-row-photo">
           ${item.photo_url
             ? `<img src="${item.photo_url}" alt="">`
-            : `<div class="listing-card-photo-placeholder">${item.type === 'offer' ? '📦' : '🔍'}</div>`}
-          <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+            : `<div class="listing-row-photo-placeholder">${item.type === 'offer' ? '📦' : '🔍'}</div>`}
         </div>
-        <div class="listing-card-body">
-          <h3>${escapeHtml(item.title)}</h3>
-          <div class="listing-card-meta">
-            ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ''}
-            ${item.brand ? `<span>${escapeHtml(item.brand)}${item.model ? ' ' + escapeHtml(item.model) : ''}</span>` : ''}
-            ${item.organization ? `<span>${escapeHtml(item.organization)}</span>` : ''}
-          </div>
+        <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+        <div class="listing-row-title">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="listing-row-sub">${[item.category, [item.brand, item.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</span>
         </div>
+        <div class="listing-row-org">${escapeHtml(item.organization || '—')}</div>
+        <div class="listing-row-condition">${escapeHtml(item.condition || '—')}</div>
       </div>
     `).join('')
 
-    grid.querySelectorAll('.listing-card').forEach(card => {
-      card.addEventListener('click', () => openDetail(card.dataset.id))
+    grid.querySelectorAll('.listing-row[data-id]').forEach(row => {
+      row.addEventListener('click', () => openDetail(row.dataset.id))
     })
   }
 
@@ -376,8 +436,10 @@
       <div class="modal-actions">
         <a href="${mailto}" class="btn btn-accent btn-sm">Send email</a>
         <button class="btn btn-ghost btn-sm" id="copy-email-btn">Copy email</button>
+        ${item.user_id !== currentUser.id ? `<button class="btn btn-ghost btn-sm" id="ask-available-btn">Still available? Ask</button>` : ''}
         ${item.user_id === currentUser.id ? `<button class="btn btn-ghost btn-sm" id="remove-listing-btn">Remove listing</button>` : ''}
       </div>
+      <p class="listing-inquiry-count" id="inquiry-count">${item.inquiry_count ? `Asked ${item.inquiry_count} time${item.inquiry_count === 1 ? '' : 's'} so far` : ''}</p>
       <p class="form-msg" id="modal-msg"></p>
     `
 
@@ -389,6 +451,15 @@
       } catch {
         document.getElementById('modal-msg').textContent = item.contact_email || ''
       }
+    })
+
+    document.getElementById('ask-available-btn')?.addEventListener('click', async () => {
+      const { error } = await supabase.rpc('increment_inquiry', { listing_id: item.id })
+      if (!error) {
+        item.inquiry_count = (item.inquiry_count || 0) + 1
+        document.getElementById('inquiry-count').textContent = `Asked ${item.inquiry_count} time${item.inquiry_count === 1 ? '' : 's'} so far`
+      }
+      window.location.href = mailto + '&body=' + encodeURIComponent('Hi, is this still available?')
     })
 
     document.getElementById('remove-listing-btn')?.addEventListener('click', async () => {
@@ -412,6 +483,47 @@
       postType = btn.dataset.type
     })
   })
+
+  // ---- category -> brand -> model, cascading ----
+  const categorySelect = document.getElementById('category')
+  const brandSelect = document.getElementById('brand')
+  const modelSelect = document.getElementById('model')
+  const modelTextInput = document.getElementById('model-text')
+
+  function refreshPostBrands() {
+    replaceOptions(brandSelect, brandsForCategory(categorySelect.value), '—')
+    refreshPostModels()
+  }
+
+  function refreshPostModels() {
+    const models = modelsForBrand(categorySelect.value, brandSelect.value)
+    if (models && models.length) {
+      replaceOptions(modelSelect, models, '—')
+      modelSelect.style.display = 'block'
+      modelTextInput.style.display = 'none'
+      modelTextInput.value = ''
+    } else {
+      modelSelect.style.display = 'none'
+      modelTextInput.style.display = 'block'
+    }
+  }
+
+  categorySelect.addEventListener('change', refreshPostBrands)
+  brandSelect.addEventListener('change', refreshPostModels)
+  modelSelect.addEventListener('change', () => {
+    // "Other" on a curated model list reveals the free-text field too,
+    // so people can say exactly which model it is
+    modelTextInput.style.display = modelSelect.value === 'Other' ? 'block' : 'none'
+    if (modelSelect.value !== 'Other') modelTextInput.value = ''
+  })
+  refreshPostBrands()
+
+  function currentModelValue() {
+    if (modelSelect.style.display !== 'none' && modelSelect.value && modelSelect.value !== 'Other') {
+      return modelSelect.value
+    }
+    return modelTextInput.value.trim() || null
+  }
 
   // Resize/crop any photo down to a clean 300x300 square before it
   // ever leaves the browser — keeps every listing's thumbnail the
@@ -470,7 +582,7 @@
         title: document.getElementById('title').value.trim(),
         category: document.getElementById('category').value,
         brand: document.getElementById('brand').value || null,
-        model: document.getElementById('model').value.trim() || null,
+        model: currentModelValue(),
         condition: document.getElementById('condition').value || null,
         description: document.getElementById('description').value.trim(),
         location: document.getElementById('location').value.trim(),
@@ -482,10 +594,12 @@
       if (error) throw error
 
       postForm.reset()
+      refreshPostBrands()
       document.getElementById('contact_email').value = currentUser.email
       postMsg.className = 'form-msg ok'
       postMsg.textContent = 'Posted to the board.'
       loadListings()
+      setTimeout(() => showView('browse'), 700)
     } catch (err) {
       postMsg.className = 'form-msg error'
       postMsg.textContent = err.message || 'Something went wrong.'
