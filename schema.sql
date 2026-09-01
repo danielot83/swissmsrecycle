@@ -68,6 +68,7 @@ alter table listings add column if not exists organization text;
 alter table listings add column if not exists contact_email text;
 alter table listings add column if not exists construction_year int;
 alter table listings add column if not exists photo_url text;
+alter table listings add column if not exists inquiry_count int not null default 0;
 
 alter table listings enable row level security;
 
@@ -100,6 +101,19 @@ begin
     alter publication supabase_realtime add table listings;
   end if;
 end $$;
+
+-- Lets any logged-in user bump a listing's "asked if still available"
+-- counter without giving them update rights over the rest of the row.
+create or replace function increment_inquiry(listing_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update listings set inquiry_count = inquiry_count + 1 where id = listing_id;
+$$;
+
+grant execute on function increment_inquiry(uuid) to authenticated;
 
 -- ---------- Storage bucket for listing photos ----------
 -- Run this part once. If it complains the bucket already exists,
