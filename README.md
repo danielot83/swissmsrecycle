@@ -41,19 +41,42 @@ storage, realtime). No build step, no framework.
 
 ## 2. What's new in this version
 
-- **Sign up** now asks for full name and company/university, shown on
-  the board next to each listing.
+- **Sign up** now asks for full name and company/university/group, shown
+  on the board next to each listing.
 - **Password requirements** are shown live while creating an account
   (8+ characters, a letter, a number).
 - **Forgot password** sends a reset email; `reset-password.html` is
   where people land to set a new one.
-- **Browsing** is now its own view: a filterable grid (type, category,
-  condition, university) with a click-through detail card showing the
-  photo, description, contact email, year built, condition, etc., plus
-  "Send email" and "Copy email" buttons.
-- **Posting** is a fuller form: category, condition, location, year
-  built, lab/university, contact email, and an optional photo (stored
-  in Supabase Storage).
+- **Browsing** is its own view: a filterable grid (type, category,
+  brand, model, condition, university) with a click-through detail
+  card showing the photo, description, contact email, year built,
+  condition, etc., plus "Send email" and "Copy email" buttons.
+- **Posting** is a fuller form: category, brand, model, condition,
+  location, year built, lab/university/group, contact email, and an
+  optional photo.
+- **Photos are auto-cropped to a 300×300 square** in the browser
+  before upload (centre-crop + resize via canvas) — every thumbnail
+  ends up the same size and shape, and uploads stay small.
+
+## About the "you can only request this after N seconds" message
+
+That message comes straight from Supabase's own auth API, not from
+this site's code — it's a built-in rate limit on how often it will
+send authentication emails (confirmation, magic link, password reset)
+to the same address in a short window. It shows up most when testing
+sign-up repeatedly with the same email.
+
+If you want people to be logged in immediately after creating an
+account (no email step at all, so this message never shows up there):
+**Supabase → Authentication → Sign In / Providers → Email → turn off
+"Confirm email"**. With it off, `signUp()` returns a session right
+away and the person lands straight on the board. This is what's
+recommended for a closed community like this one.
+
+If you'd rather keep email confirmation on, the message itself isn't
+a bug — it clears on its own after the wait it names, and switching to
+a custom SMTP provider under **Authentication → Email → SMTP Settings**
+removes Supabase's shared rate limit entirely.
 
 ## Notes / honest limitations
 

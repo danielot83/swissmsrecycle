@@ -46,6 +46,8 @@ create table if not exists listings (
   title text not null,
   description text,
   category text,                -- Instrument / Column / Consumable / Standard / Spare part / Other
+  brand text,                    -- manufacturer, e.g. Waters, Thermo, Agilent, Bruker, Sciex
+  model text,                    -- model name/number
   condition text,                -- New / Like new / Good / Fair / Needs repair / For parts
   location text,
   organization text,             -- lab / university, shown + filterable
@@ -58,6 +60,8 @@ create table if not exists listings (
 -- If you already had the old, simpler listings table, this adds
 -- the new columns on top of it without losing existing rows.
 alter table listings add column if not exists category text;
+alter table listings add column if not exists brand text;
+alter table listings add column if not exists model text;
 alter table listings add column if not exists condition text;
 alter table listings add column if not exists location text;
 alter table listings add column if not exists organization text;

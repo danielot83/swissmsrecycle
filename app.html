@@ -36,9 +36,36 @@
       </select>
       <select id="f-category">
         <option value="">All categories</option>
+        <option value="Instrument">Instrument</option>
+        <option value="Column">Column</option>
+        <option value="Consumable">Consumable</option>
+        <option value="Standard / reference material">Standard / reference material</option>
+        <option value="Spare part">Spare part</option>
+        <option value="Software / license">Software / license</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="f-brand">
+        <option value="">All brands</option>
+        <option value="Waters">Waters</option>
+        <option value="Thermo Fisher">Thermo Fisher</option>
+        <option value="Agilent">Agilent</option>
+        <option value="Bruker">Bruker</option>
+        <option value="Sciex">Sciex</option>
+        <option value="Shimadzu">Shimadzu</option>
+        <option value="Bio-Rad">Bio-Rad</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="f-model">
+        <option value="">All models</option>
       </select>
       <select id="f-condition">
         <option value="">Any condition</option>
+        <option value="New">New</option>
+        <option value="Like new">Like new</option>
+        <option value="Good">Good</option>
+        <option value="Fair">Fair</option>
+        <option value="Needs repair">Needs repair</option>
+        <option value="For parts only">For parts only</option>
       </select>
       <select id="f-org">
         <option value="">Any university / lab</option>
@@ -90,6 +117,27 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div>
+            <label for="brand">Brand</label>
+            <select id="brand">
+              <option value="">—</option>
+              <option value="Waters">Waters</option>
+              <option value="Thermo Fisher">Thermo Fisher</option>
+              <option value="Agilent">Agilent</option>
+              <option value="Bruker">Bruker</option>
+              <option value="Sciex">Sciex</option>
+              <option value="Shimadzu">Shimadzu</option>
+              <option value="Bio-Rad">Bio-Rad</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="model">Model</label>
+            <input type="text" id="model" placeholder="e.g. Xevo G2-XS">
+          </div>
+        </div>
+
         <label for="description">Details</label>
         <textarea id="description" rows="3" placeholder="Model, quantity, expiry, what it needs…"></textarea>
 
@@ -106,7 +154,7 @@
 
         <div class="form-row">
           <div>
-            <label for="organization">Lab / university</label>
+            <label for="organization">Lab / university / group</label>
             <input type="text" id="organization" placeholder="e.g. Proteomics Core, Uni Bern">
           </div>
           <div>
@@ -115,7 +163,7 @@
           </div>
         </div>
 
-        <label for="photo">Photo (optional)</label>
+        <label for="photo">Photo (optional — auto-cropped to a 300×300 square)</label>
         <input type="file" id="photo" accept="image/*">
 
         <button type="submit" class="btn btn-primary auth-submit">Post to the board</button>
@@ -187,6 +235,8 @@
   const grid = document.getElementById('listings-grid')
   const fType = document.getElementById('f-type')
   const fCategory = document.getElementById('f-category')
+  const fBrand = document.getElementById('f-brand')
+  const fModel = document.getElementById('f-model')
   const fCondition = document.getElementById('f-condition')
   const fOrg = document.getElementById('f-org')
   const clearFiltersBtn = document.getElementById('clear-filters')
@@ -218,6 +268,8 @@
     return items.filter(item => {
       if (fType.value && item.type !== fType.value) return false
       if (fCategory.value && item.category !== fCategory.value) return false
+      if (fBrand.value && item.brand !== fBrand.value) return false
+      if (fModel.value && item.model !== fModel.value) return false
       if (fCondition.value && item.condition !== fCondition.value) return false
       if (fOrg.value && item.organization !== fOrg.value) return false
       return true
@@ -242,6 +294,7 @@
           <h3>${escapeHtml(item.title)}</h3>
           <div class="listing-card-meta">
             ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ''}
+            ${item.brand ? `<span>${escapeHtml(item.brand)}${item.model ? ' ' + escapeHtml(item.model) : ''}</span>` : ''}
             ${item.organization ? `<span>${escapeHtml(item.organization)}</span>` : ''}
           </div>
         </div>
@@ -265,15 +318,14 @@
       return
     }
     allListings = data
-    populateSelect(fCategory, [...new Set(data.map(d => d.category))].sort())
-    populateSelect(fCondition, [...new Set(data.map(d => d.condition))].sort())
+    populateSelect(fModel, [...new Set(data.map(d => d.model))].sort())
     populateSelect(fOrg, [...new Set(data.map(d => d.organization))].sort())
     renderGrid()
   }
 
-  ;[fType, fCategory, fCondition, fOrg].forEach(sel => sel.addEventListener('change', renderGrid))
+  ;[fType, fCategory, fBrand, fModel, fCondition, fOrg].forEach(sel => sel.addEventListener('change', renderGrid))
   clearFiltersBtn.addEventListener('click', () => {
-    fType.value = ''; fCategory.value = ''; fCondition.value = ''; fOrg.value = ''
+    fType.value = ''; fCategory.value = ''; fBrand.value = ''; fModel.value = ''; fCondition.value = ''; fOrg.value = ''
     renderGrid()
   })
 
@@ -296,6 +348,8 @@
       ${item.description ? `<p class="modal-desc">${escapeHtml(item.description)}</p>` : ''}
       <dl class="modal-details">
         ${item.category ? `<dt>Category</dt><dd>${escapeHtml(item.category)}</dd>` : ''}
+        ${item.brand ? `<dt>Brand</dt><dd>${escapeHtml(item.brand)}</dd>` : ''}
+        ${item.model ? `<dt>Model</dt><dd>${escapeHtml(item.model)}</dd>` : ''}
         ${item.condition ? `<dt>Condition</dt><dd>${escapeHtml(item.condition)}</dd>` : ''}
         ${item.location ? `<dt>Location</dt><dd>${escapeHtml(item.location)}</dd>` : ''}
         ${item.organization ? `<dt>Lab / university</dt><dd>${escapeHtml(item.organization)}</dd>` : ''}
@@ -342,6 +396,37 @@
     })
   })
 
+  // Resize/crop any photo down to a clean 300x300 square before it
+  // ever leaves the browser — keeps every listing's thumbnail the
+  // same size and shape, and keeps uploads small.
+  function resizeImageToSquare(file, size = 300) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onerror = () => reject(new Error('Could not read that image.'))
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onerror = () => reject(new Error('Could not read that image.'))
+        img.onload = () => {
+          const minSide = Math.min(img.width, img.height)
+          const sx = (img.width - minSide) / 2
+          const sy = (img.height - minSide) / 2
+          const canvas = document.createElement('canvas')
+          canvas.width = size
+          canvas.height = size
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size)
+          canvas.toBlob(
+            (blob) => blob ? resolve(blob) : reject(new Error('Could not process that image.')),
+            'image/jpeg',
+            0.86
+          )
+        }
+        img.src = e.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
   postForm.addEventListener('submit', async (e) => {
     e.preventDefault()
     postMsg.className = 'form-msg'
@@ -352,9 +437,11 @@
 
     try {
       if (photoFile) {
-        const ext = photoFile.name.split('.').pop()
-        const path = `${currentUser.id}/${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage.from('listing-photos').upload(path, photoFile)
+        const squarePhoto = await resizeImageToSquare(photoFile, 300)
+        const path = `${currentUser.id}/${Date.now()}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('listing-photos')
+          .upload(path, squarePhoto, { contentType: 'image/jpeg' })
         if (uploadError) throw uploadError
         const { data: pub } = supabase.storage.from('listing-photos').getPublicUrl(path)
         photo_url = pub.publicUrl
@@ -365,6 +452,8 @@
         type: postType,
         title: document.getElementById('title').value.trim(),
         category: document.getElementById('category').value,
+        brand: document.getElementById('brand').value || null,
+        model: document.getElementById('model').value.trim() || null,
         condition: document.getElementById('condition').value || null,
         description: document.getElementById('description').value.trim(),
         location: document.getElementById('location').value.trim(),
