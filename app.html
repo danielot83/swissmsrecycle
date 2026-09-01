@@ -21,56 +21,129 @@
     </div>
   </header>
 
-  <div class="board-tabs">
-    <button class="board-tab active" data-type="offer">Offered</button>
-    <button class="board-tab" data-type="request">Needed</button>
+  <div class="app-tabs">
+    <button class="app-tab active" data-view="browse">Browse the board</button>
+    <button class="app-tab" data-view="post">Post something</button>
   </div>
 
-  <div class="board-layout">
-    <div id="listings">
-      <div class="empty-state">Loading…</div>
+  <!-- ============ BROWSE VIEW ============ -->
+  <section id="view-browse" class="app-view">
+    <div class="filters">
+      <select id="f-type">
+        <option value="">All types</option>
+        <option value="offer">Offered</option>
+        <option value="request">Requested</option>
+      </select>
+      <select id="f-category">
+        <option value="">All categories</option>
+      </select>
+      <select id="f-condition">
+        <option value="">Any condition</option>
+      </select>
+      <select id="f-org">
+        <option value="">Any university / lab</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="clear-filters">Clear filters</button>
     </div>
 
-    <div class="post-form">
-      <h3>Post to the board</h3>
-      <p class="hint">Visible to everyone logged in.</p>
+    <div id="listings-grid" class="listings-grid">
+      <div class="empty-state">Loading…</div>
+    </div>
+  </section>
 
+  <!-- ============ POST VIEW ============ -->
+  <section id="view-post" class="app-view" style="display:none;">
+    <div class="post-card">
       <div class="type-toggle" id="post-type-toggle">
-        <button type="button" class="active" data-type="offer">Offer</button>
-        <button type="button" data-type="request">Request</button>
+        <button type="button" class="active" data-type="offer">I have something to offer</button>
+        <button type="button" data-type="request">I'm looking for something</button>
       </div>
 
       <form id="post-form">
         <label for="title">Title</label>
         <input type="text" id="title" required placeholder="e.g. HPLC column, C18, 2.1mm">
 
+        <div class="form-row">
+          <div>
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="Instrument">Instrument</option>
+              <option value="Column">Column</option>
+              <option value="Consumable">Consumable</option>
+              <option value="Standard / reference material">Standard / reference material</option>
+              <option value="Spare part">Spare part</option>
+              <option value="Software / license">Software / license</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="condition">Condition</label>
+            <select id="condition">
+              <option value="">—</option>
+              <option value="New">New</option>
+              <option value="Like new">Like new</option>
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Needs repair">Needs repair</option>
+              <option value="For parts only">For parts only</option>
+            </select>
+          </div>
+        </div>
+
         <label for="description">Details</label>
-        <textarea id="description" rows="3" placeholder="Condition, quantity, expiry, model…"></textarea>
+        <textarea id="description" rows="3" placeholder="Model, quantity, expiry, what it needs…"></textarea>
 
-        <label for="lab_name">Lab / platform</label>
-        <input type="text" id="lab_name" required placeholder="e.g. Proteomics Core, Uni Bern">
+        <div class="form-row">
+          <div>
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="e.g. Basel">
+          </div>
+          <div>
+            <label for="construction_year">Year built</label>
+            <input type="number" id="construction_year" min="1970" max="2100" placeholder="e.g. 2015">
+          </div>
+        </div>
 
-        <button type="submit" class="btn btn-primary auth-submit">Post</button>
+        <div class="form-row">
+          <div>
+            <label for="organization">Lab / university</label>
+            <input type="text" id="organization" placeholder="e.g. Proteomics Core, Uni Bern">
+          </div>
+          <div>
+            <label for="contact_email">Contact email</label>
+            <input type="email" id="contact_email" placeholder="name@institution.ch">
+          </div>
+        </div>
+
+        <label for="photo">Photo (optional)</label>
+        <input type="file" id="photo" accept="image/*">
+
+        <button type="submit" class="btn btn-primary auth-submit">Post to the board</button>
         <p class="form-msg" id="post-msg"></p>
       </form>
     </div>
+  </section>
+</div>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div id="detail-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-card">
+    <button class="modal-close" id="modal-close">×</button>
+    <div id="modal-body"></div>
   </div>
 </div>
 
 <script type="module">
   import { supabase } from './supabase-client.js'
 
-  const listingsEl = document.getElementById('listings')
   const userEmailEl = document.getElementById('user-email')
   const signoutBtn = document.getElementById('signout-btn')
-  const boardTabs = document.querySelectorAll('.board-tab')
-  const postTypeToggle = document.getElementById('post-type-toggle')
-  const postForm = document.getElementById('post-form')
-  const postMsg = document.getElementById('post-msg')
+  const appTabs = document.querySelectorAll('.app-tab')
+  const viewBrowse = document.getElementById('view-browse')
+  const viewPost = document.getElementById('view-post')
 
   let currentUser = null
-  let activeBoard = 'offer'
-  let postType = 'offer'
+  let currentProfile = null
   let allListings = []
 
   // ---- Auth guard ----
@@ -91,70 +164,95 @@
     window.location.href = 'index.html'
   })
 
-  // ---- Board tabs ----
-  boardTabs.forEach(tab => {
+  // load (or lazily create) this user's profile, and prefill the post form's contact email
+  const { data: profileData } = await supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle()
+  currentProfile = profileData
+  document.getElementById('contact_email').value = currentUser.email
+  if (currentProfile?.organization) {
+    document.getElementById('organization').value = currentProfile.organization
+  }
+
+  // ---- Top-level tabs ----
+  appTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      boardTabs.forEach(t => t.classList.remove('active'))
+      appTabs.forEach(t => t.classList.remove('active'))
       tab.classList.add('active')
-      activeBoard = tab.dataset.type
-      renderListings()
+      const view = tab.dataset.view
+      viewBrowse.style.display = view === 'browse' ? 'block' : 'none'
+      viewPost.style.display = view === 'post' ? 'block' : 'none'
     })
   })
 
-  // ---- Post form type toggle ----
-  postTypeToggle.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      postTypeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'))
-      btn.classList.add('active')
-      postType = btn.dataset.type
-    })
-  })
+  // ============ BROWSE ============
+  const grid = document.getElementById('listings-grid')
+  const fType = document.getElementById('f-type')
+  const fCategory = document.getElementById('f-category')
+  const fCondition = document.getElementById('f-condition')
+  const fOrg = document.getElementById('f-org')
+  const clearFiltersBtn = document.getElementById('clear-filters')
 
-  // ---- Render ----
-  function renderListings() {
-    const items = allListings.filter(i => i.type === activeBoard)
-    if (items.length === 0) {
-      listingsEl.innerHTML = `<div class="empty-state">
-        Nothing ${activeBoard === 'offer' ? 'offered' : 'requested'} yet.
-        Be the first to post on the right.
-      </div>`
-      return
-    }
-    listingsEl.innerHTML = items.map(item => `
-      <div class="listing">
-        <div class="listing-top">
-          <div>
-            <h3>${escapeHtml(item.title)}</h3>
-            ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
-          </div>
-          ${item.user_id === currentUser.id
-            ? `<button class="btn btn-ghost btn-sm" data-remove="${item.id}">Remove</button>`
-            : ''}
-        </div>
-        <div class="listing-meta">
-          <span>${escapeHtml(item.lab_name || '')}</span>
-          <span>${formatDate(item.created_at)}</span>
-        </div>
-      </div>
-    `).join('')
-
-    listingsEl.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => removeListing(btn.dataset.remove))
+  function populateSelect(select, values, placeholderKeep = true) {
+    const existing = new Set(Array.from(select.options).map(o => o.value))
+    values.forEach(v => {
+      if (v && !existing.has(v)) {
+        const opt = document.createElement('option')
+        opt.value = v
+        opt.textContent = v
+        select.appendChild(opt)
+      }
     })
   }
 
   function escapeHtml(str) {
     const div = document.createElement('div')
-    div.textContent = str
+    div.textContent = str || ''
     return div.innerHTML
   }
 
   function formatDate(iso) {
     const d = new Date(iso)
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
   }
 
-  // ---- Data ----
+  function applyFilters(items) {
+    return items.filter(item => {
+      if (fType.value && item.type !== fType.value) return false
+      if (fCategory.value && item.category !== fCategory.value) return false
+      if (fCondition.value && item.condition !== fCondition.value) return false
+      if (fOrg.value && item.organization !== fOrg.value) return false
+      return true
+    })
+  }
+
+  function renderGrid() {
+    const items = applyFilters(allListings)
+    if (items.length === 0) {
+      grid.innerHTML = `<div class="empty-state">Nothing matches those filters yet.</div>`
+      return
+    }
+    grid.innerHTML = items.map(item => `
+      <div class="listing-card" data-id="${item.id}">
+        <div class="listing-card-photo">
+          ${item.photo_url
+            ? `<img src="${item.photo_url}" alt="">`
+            : `<div class="listing-card-photo-placeholder">${item.type === 'offer' ? '📦' : '🔍'}</div>`}
+          <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+        </div>
+        <div class="listing-card-body">
+          <h3>${escapeHtml(item.title)}</h3>
+          <div class="listing-card-meta">
+            ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ''}
+            ${item.organization ? `<span>${escapeHtml(item.organization)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('')
+
+    grid.querySelectorAll('.listing-card').forEach(card => {
+      card.addEventListener('click', () => openDetail(card.dataset.id))
+    })
+  }
+
   async function loadListings() {
     const { data, error } = await supabase
       .from('listings')
@@ -163,43 +261,128 @@
       .order('created_at', { ascending: false })
 
     if (error) {
-      listingsEl.innerHTML = `<div class="empty-state">Could not load the board: ${escapeHtml(error.message)}</div>`
+      grid.innerHTML = `<div class="empty-state">Could not load the board: ${escapeHtml(error.message)}</div>`
       return
     }
     allListings = data
-    renderListings()
+    populateSelect(fCategory, [...new Set(data.map(d => d.category))].sort())
+    populateSelect(fCondition, [...new Set(data.map(d => d.condition))].sort())
+    populateSelect(fOrg, [...new Set(data.map(d => d.organization))].sort())
+    renderGrid()
   }
 
-  async function removeListing(id) {
-    const { error } = await supabase.from('listings').delete().eq('id', id)
-    if (error) alert(error.message)
+  ;[fType, fCategory, fCondition, fOrg].forEach(sel => sel.addEventListener('change', renderGrid))
+  clearFiltersBtn.addEventListener('click', () => {
+    fType.value = ''; fCategory.value = ''; fCondition.value = ''; fOrg.value = ''
+    renderGrid()
+  })
+
+  // ---- Detail modal ----
+  const modal = document.getElementById('detail-modal')
+  const modalBody = document.getElementById('modal-body')
+  document.getElementById('modal-close').addEventListener('click', () => modal.style.display = 'none')
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none' })
+
+  function openDetail(id) {
+    const item = allListings.find(i => i.id === id)
+    if (!item) return
+
+    const mailto = `mailto:${encodeURIComponent(item.contact_email || '')}?subject=${encodeURIComponent('SwissMsRecycle: ' + item.title)}`
+
+    modalBody.innerHTML = `
+      ${item.photo_url ? `<img class="modal-photo" src="${item.photo_url}" alt="">` : ''}
+      <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+      <h2>${escapeHtml(item.title)}</h2>
+      ${item.description ? `<p class="modal-desc">${escapeHtml(item.description)}</p>` : ''}
+      <dl class="modal-details">
+        ${item.category ? `<dt>Category</dt><dd>${escapeHtml(item.category)}</dd>` : ''}
+        ${item.condition ? `<dt>Condition</dt><dd>${escapeHtml(item.condition)}</dd>` : ''}
+        ${item.location ? `<dt>Location</dt><dd>${escapeHtml(item.location)}</dd>` : ''}
+        ${item.organization ? `<dt>Lab / university</dt><dd>${escapeHtml(item.organization)}</dd>` : ''}
+        ${item.construction_year ? `<dt>Year built</dt><dd>${escapeHtml(String(item.construction_year))}</dd>` : ''}
+        <dt>Posted</dt><dd>${formatDate(item.created_at)}</dd>
+      </dl>
+      <div class="modal-actions">
+        <a href="${mailto}" class="btn btn-accent btn-sm">Send email</a>
+        <button class="btn btn-ghost btn-sm" id="copy-email-btn">Copy email</button>
+        ${item.user_id === currentUser.id ? `<button class="btn btn-ghost btn-sm" id="remove-listing-btn">Remove listing</button>` : ''}
+      </div>
+      <p class="form-msg" id="modal-msg"></p>
+    `
+
+    const copyBtn = document.getElementById('copy-email-btn')
+    copyBtn?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(item.contact_email || '')
+        document.getElementById('modal-msg').textContent = 'Email copied.'
+      } catch {
+        document.getElementById('modal-msg').textContent = item.contact_email || ''
+      }
+    })
+
+    document.getElementById('remove-listing-btn')?.addEventListener('click', async () => {
+      const { error } = await supabase.from('listings').delete().eq('id', item.id)
+      if (!error) { modal.style.display = 'none'; loadListings() }
+    })
+
+    modal.style.display = 'flex'
   }
+
+  // ============ POST ============
+  const postTypeToggle = document.getElementById('post-type-toggle')
+  const postForm = document.getElementById('post-form')
+  const postMsg = document.getElementById('post-msg')
+  let postType = 'offer'
+
+  postTypeToggle.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      postTypeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      postType = btn.dataset.type
+    })
+  })
 
   postForm.addEventListener('submit', async (e) => {
     e.preventDefault()
     postMsg.className = 'form-msg'
-    postMsg.textContent = ''
+    postMsg.textContent = 'Posting…'
 
-    const title = document.getElementById('title').value.trim()
-    const description = document.getElementById('description').value.trim()
-    const lab_name = document.getElementById('lab_name').value.trim()
+    const photoFile = document.getElementById('photo').files[0]
+    let photo_url = null
 
-    const { error } = await supabase.from('listings').insert({
-      title,
-      description,
-      lab_name,
-      type: postType,
-      user_id: currentUser.id,
-    })
+    try {
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop()
+        const path = `${currentUser.id}/${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage.from('listing-photos').upload(path, photoFile)
+        if (uploadError) throw uploadError
+        const { data: pub } = supabase.storage.from('listing-photos').getPublicUrl(path)
+        photo_url = pub.publicUrl
+      }
 
-    if (error) {
-      postMsg.className = 'form-msg error'
-      postMsg.textContent = error.message
-    } else {
+      const { error } = await supabase.from('listings').insert({
+        user_id: currentUser.id,
+        type: postType,
+        title: document.getElementById('title').value.trim(),
+        category: document.getElementById('category').value,
+        condition: document.getElementById('condition').value || null,
+        description: document.getElementById('description').value.trim(),
+        location: document.getElementById('location').value.trim(),
+        organization: document.getElementById('organization').value.trim(),
+        contact_email: document.getElementById('contact_email').value.trim(),
+        construction_year: document.getElementById('construction_year').value || null,
+        photo_url
+      })
+      if (error) throw error
+
       postForm.reset()
+      document.getElementById('contact_email').value = currentUser.email
       postMsg.className = 'form-msg ok'
-      postMsg.textContent = 'Posted.'
-      setTimeout(() => { postMsg.textContent = '' }, 2500)
+      postMsg.textContent = 'Posted to the board.'
+      loadListings()
+    } catch (err) {
+      postMsg.className = 'form-msg error'
+      postMsg.textContent = err.message || 'Something went wrong.'
     }
   })
 

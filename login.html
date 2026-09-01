@@ -20,28 +20,50 @@
         <circle r="4" cy="50" fill="var(--ion-blue)"><animateMotion path="M15 0 L85 0" dur="1.6s" begin="-1s" repeatCount="indefinite"/></circle>
       </svg>
       <svg class="ion-overlay ion-overlay--tower" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle r="4" cx="50" fill="var(--accent)"><animateMotion path="M0 10 L0 90" dur="1.8s" repeatCount="indefinite"/></circle>
-        <circle r="3.4" cx="50" fill="var(--offer)"><animateMotion path="M0 90 L0 10" dur="2.1s" repeatCount="indefinite"/></circle>
-        <circle r="2.8" cx="50" fill="var(--ion-blue)"><animateMotion path="M0 10 L0 90" dur="1.5s" begin="-0.6s" repeatCount="indefinite"/></circle>
+        <circle r="4" fill="var(--accent)"><animateMotion path="M15 95 L50 4 L85 95" dur="2s" repeatCount="indefinite"/></circle>
+        <circle r="3.4" fill="var(--offer)"><animateMotion path="M15 95 L50 4 L85 95" dur="2s" begin="-0.7s" repeatCount="indefinite"/></circle>
+        <circle r="2.8" fill="var(--ion-blue)"><animateMotion path="M15 95 L50 4 L85 95" dur="2s" begin="-1.4s" repeatCount="indefinite"/></circle>
       </svg>
     </div>
     <h1><span class="cap">S</span>wiss<span class="cap">M</span>s<span class="cap">R</span>ecycle</h1>
-    <p class="auth-sub">Log in to browse and post to the board.</p>
+    <p class="auth-sub" id="auth-sub">Log in to browse and post to the board.</p>
 
-    <div class="tabs">
+    <div class="tabs" id="tabs">
       <div class="tab active" data-mode="signin">Log in</div>
       <div class="tab" data-mode="signup">Create account</div>
     </div>
 
     <form id="auth-form">
+
+      <div id="signup-fields" class="hidden-fields">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" autocomplete="name" placeholder="Jane Doe">
+
+        <label for="organization">Company / university</label>
+        <input type="text" id="organization" autocomplete="organization" placeholder="e.g. ETH Zürich, Proteomics Core">
+      </div>
+
       <label for="email">Email</label>
       <input type="email" id="email" required autocomplete="email" placeholder="name@institution.ch">
 
-      <label for="password">Password</label>
-      <input type="password" id="password" required autocomplete="current-password" minlength="6" placeholder="At least 6 characters">
+      <label for="password" id="password-label">Password</label>
+      <input type="password" id="password" required autocomplete="current-password" minlength="8" placeholder="At least 8 characters">
+
+      <ul class="pw-hints" id="pw-hints">
+        <li id="hint-length">At least 8 characters</li>
+        <li id="hint-letter">At least one letter</li>
+        <li id="hint-number">At least one number</li>
+      </ul>
+
+      <div id="confirm-field" class="hidden-fields">
+        <label for="password2">Confirm password</label>
+        <input type="password" id="password2" autocomplete="new-password" placeholder="Type it again">
+      </div>
 
       <button type="submit" class="btn btn-accent auth-submit" id="submit-btn">Log in</button>
       <p class="form-msg" id="form-msg"></p>
+
+      <button type="button" class="link-btn" id="forgot-link">Forgot your password?</button>
     </form>
 
     <a href="index.html" class="back-link">← Back to home</a>
@@ -54,27 +76,70 @@
   const form = document.getElementById('auth-form')
   const emailInput = document.getElementById('email')
   const passwordInput = document.getElementById('password')
+  const password2Input = document.getElementById('password2')
+  const fullNameInput = document.getElementById('full_name')
+  const organizationInput = document.getElementById('organization')
   const submitBtn = document.getElementById('submit-btn')
   const msg = document.getElementById('form-msg')
   const tabs = document.querySelectorAll('.tab')
+  const tabsWrap = document.getElementById('tabs')
+  const authSub = document.getElementById('auth-sub')
+  const signupFields = document.getElementById('signup-fields')
+  const confirmField = document.getElementById('confirm-field')
+  const pwHints = document.getElementById('pw-hints')
+  const forgotLink = document.getElementById('forgot-link')
+  const passwordLabel = document.getElementById('password-label')
 
-  let mode = 'signin'
+  let mode = 'signin' // 'signin' | 'signup' | 'forgot'
 
-  // If already logged in, skip straight to the app
   supabase.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = 'app.html'
   })
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'))
-      tab.classList.add('active')
-      mode = tab.dataset.mode
-      submitBtn.textContent = mode === 'signin' ? 'Log in' : 'Create account'
-      passwordInput.autocomplete = mode === 'signin' ? 'current-password' : 'new-password'
-      msg.textContent = ''
-    })
-  })
+  function setMode(newMode) {
+    mode = newMode
+    msg.textContent = ''
+    msg.className = 'form-msg'
+
+    tabsWrap.style.display = mode === 'forgot' ? 'none' : 'flex'
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode))
+
+    signupFields.style.display = mode === 'signup' ? 'block' : 'none'
+    confirmField.style.display = mode === 'signup' ? 'block' : 'none'
+    pwHints.style.display = mode === 'signup' ? 'block' : 'none'
+    document.getElementById('password').style.display = mode === 'forgot' ? 'none' : 'block'
+    passwordLabel.style.display = mode === 'forgot' ? 'none' : 'block'
+    fullNameInput.required = mode === 'signup'
+    organizationInput.required = mode === 'signup'
+    passwordInput.required = mode !== 'forgot'
+
+    forgotLink.style.display = mode === 'signin' ? 'inline' : 'none'
+
+    if (mode === 'signin') {
+      authSub.textContent = 'Log in to browse and post to the board.'
+      submitBtn.textContent = 'Log in'
+      passwordInput.autocomplete = 'current-password'
+    } else if (mode === 'signup') {
+      authSub.textContent = 'Create an account to join the board.'
+      submitBtn.textContent = 'Create account'
+      passwordInput.autocomplete = 'new-password'
+    } else {
+      authSub.textContent = "Enter your email and we'll send you a reset link."
+      submitBtn.textContent = 'Send reset link'
+    }
+  }
+
+  tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.mode)))
+  forgotLink.addEventListener('click', () => setMode('forgot'))
+
+  // live password requirement checklist
+  function checkPassword() {
+    const v = passwordInput.value
+    document.getElementById('hint-length').classList.toggle('met', v.length >= 8)
+    document.getElementById('hint-letter').classList.toggle('met', /[a-zA-Z]/.test(v))
+    document.getElementById('hint-number').classList.toggle('met', /[0-9]/.test(v))
+  }
+  passwordInput.addEventListener('input', checkPassword)
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -86,16 +151,43 @@
     const password = passwordInput.value
 
     try {
-      if (mode === 'signin') {
+      if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html')
+        })
+        if (error) throw error
+        msg.className = 'form-msg ok'
+        msg.textContent = 'Check your email for a reset link.'
+      } else if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         window.location.href = 'app.html'
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        // signup
+        if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8) {
+          throw new Error('Please meet all password requirements below.')
+        }
+        if (password !== password2Input.value) {
+          throw new Error("Passwords don't match.")
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullNameInput.value.trim(), organization: organizationInput.value.trim() } }
+        })
         if (error) throw error
 
+        // Save the profile row (name/org shown later on their listings)
+        if (data.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            full_name: fullNameInput.value.trim(),
+            organization: organizationInput.value.trim(),
+            email: email
+          })
+        }
+
         if (data.session) {
-          // Email confirmation disabled in Supabase settings — logged in right away
           window.location.href = 'app.html'
         } else {
           msg.className = 'form-msg ok'
@@ -109,6 +201,8 @@
       submitBtn.disabled = false
     }
   })
+
+  setMode('signin')
 </script>
 
 </body>
