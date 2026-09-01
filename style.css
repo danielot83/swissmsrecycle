@@ -36,7 +36,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--paper);
+  background:
+    radial-gradient(ellipse 60% 50% at 25% 15%, rgba(200, 68, 60, 0.10), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 78% 55%, rgba(27, 122, 120, 0.09), transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -133,10 +137,6 @@ a { color: inherit; }
 
 .hero-bg {
   position: relative;
-  background:
-    radial-gradient(ellipse 60% 50% at 25% 15%, rgba(200, 68, 60, 0.10), transparent 60%),
-    radial-gradient(ellipse 55% 45% at 78% 55%, rgba(27, 122, 120, 0.09), transparent 60%),
-    var(--paper);
 }
 
 .hero-bg .container {
