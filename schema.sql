@@ -91,7 +91,15 @@ create policy "Owners can delete their own listing"
 on listings for delete
 using (auth.uid() = user_id);
 
-alter publication supabase_realtime add table listings;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'listings'
+  ) then
+    alter publication supabase_realtime add table listings;
+  end if;
+end $$;
 
 -- ---------- Storage bucket for listing photos ----------
 -- Run this part once. If it complains the bucket already exists,
