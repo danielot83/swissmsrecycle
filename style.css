@@ -841,6 +841,10 @@ input:focus, textarea:focus, select:focus {
   gap: 14px;
 }
 
+.form-row--single {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 480px) {
   .form-row { grid-template-columns: 1fr; }
 }

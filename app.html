@@ -109,7 +109,7 @@
         <label for="title">Title</label>
         <input type="text" id="title" required placeholder="e.g. HPLC column, C18, 2.1mm">
 
-        <div class="form-row">
+        <div class="form-row" id="category-condition-row">
           <div>
             <label for="category">Category</label>
             <select id="category">
@@ -122,7 +122,7 @@
               <option value="Other">Other</option>
             </select>
           </div>
-          <div>
+          <div id="condition-field">
             <label for="condition">Condition</label>
             <select id="condition">
               <option value="">—</option>
@@ -155,23 +155,23 @@
         <label for="description">Details</label>
         <textarea id="description" rows="3" placeholder="Model, quantity, expiry, what it needs…"></textarea>
 
-        <div class="form-row">
+        <div class="form-row" id="location-year-row">
           <div>
             <label for="location">Location</label>
             <input type="text" id="location" placeholder="e.g. Basel">
           </div>
-          <div>
+          <div id="year-field">
             <label for="construction_year">Year built</label>
             <input type="number" id="construction_year" min="1970" max="2100" placeholder="e.g. 2015">
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" id="org-inventory-row">
           <div>
             <label for="organization">Lab / university / group</label>
             <input type="text" id="organization" placeholder="e.g. Proteomics Core, Uni Bern">
           </div>
-          <div>
+          <div id="inventory-field">
             <label for="inventory_number">Inventory number (optional)</label>
             <input type="text" id="inventory_number" placeholder="e.g. INV-2024-0113">
           </div>
@@ -562,13 +562,37 @@
   const postMsg = document.getElementById('post-msg')
   let postType = 'offer'
 
+  // Fields that only make sense when you already have the item in hand
+  // (condition, year built, inventory number) — hidden for requests,
+  // since the person posting a request doesn't have those details.
+  const offerOnlyRows = [
+    { field: document.getElementById('condition-field'), row: document.getElementById('category-condition-row') },
+    { field: document.getElementById('year-field'), row: document.getElementById('location-year-row') },
+    { field: document.getElementById('inventory-field'), row: document.getElementById('org-inventory-row') },
+  ]
+
+  function applyPostTypeVisibility() {
+    const isOffer = postType === 'offer'
+    offerOnlyRows.forEach(({ field, row }) => {
+      field.style.display = isOffer ? 'block' : 'none'
+      row.classList.toggle('form-row--single', !isOffer)
+    })
+    if (!isOffer) {
+      document.getElementById('condition').value = ''
+      document.getElementById('construction_year').value = ''
+      document.getElementById('inventory_number').value = ''
+    }
+  }
+
   postTypeToggle.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       postTypeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'))
       btn.classList.add('active')
       postType = btn.dataset.type
+      applyPostTypeVisibility()
     })
   })
+  applyPostTypeVisibility()
 
   // ---- category -> brand -> model, cascading ----
   const categorySelect = document.getElementById('category')
@@ -669,13 +693,13 @@
         category: document.getElementById('category').value,
         brand: document.getElementById('brand').value || null,
         model: currentModelValue(),
-        condition: document.getElementById('condition').value || null,
+        condition: postType === 'offer' ? (document.getElementById('condition').value || null) : null,
         description: document.getElementById('description').value.trim(),
         location: document.getElementById('location').value.trim(),
         organization: document.getElementById('organization').value.trim(),
         contact_email: document.getElementById('contact_email').value.trim(),
-        construction_year: document.getElementById('construction_year').value || null,
-        inventory_number: document.getElementById('inventory_number').value.trim() || null,
+        construction_year: postType === 'offer' ? (document.getElementById('construction_year').value || null) : null,
+        inventory_number: postType === 'offer' ? (document.getElementById('inventory_number').value.trim() || null) : null,
         photo_url
       })
       if (error) throw error
