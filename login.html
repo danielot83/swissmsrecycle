@@ -62,6 +62,7 @@
       </div>
 
       <button type="submit" class="btn btn-accent auth-submit" id="submit-btn">Log in</button>
+      <p class="settings-hint" id="terms-note" style="display:none;">By creating an account you agree to our <a href="terms.html" target="_blank">Terms &amp; privacy</a>.</p>
       <p class="form-msg" id="form-msg"></p>
 
       <button type="button" class="link-btn" id="forgot-link">Forgot your password?</button>
@@ -69,6 +70,11 @@
 
     <a href="index.html" class="back-link">← Back to home</a>
   </div>
+
+  <footer class="footer footer--auth">
+    <span><span class="cap">S</span>wiss<span class="cap">M</span>s<span class="cap">R</span>ecycle</span>
+    <span>By and for the Swiss mass spectrometry community · <a href="terms.html">Terms &amp; privacy</a></span>
+  </footer>
 </div>
 
 <script type="module">
@@ -108,6 +114,7 @@
     signupFields.style.display = mode === 'signup' ? 'block' : 'none'
     confirmField.style.display = mode === 'signup' ? 'block' : 'none'
     pwHints.style.display = mode === 'signup' ? 'block' : 'none'
+    document.getElementById('terms-note').style.display = mode === 'signup' ? 'block' : 'none'
     document.getElementById('password').style.display = mode === 'forgot' ? 'none' : 'block'
     passwordLabel.style.display = mode === 'forgot' ? 'none' : 'block'
     fullNameInput.required = mode === 'signup'

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — SwissMsRecycle</title>
+<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="shortcut icon" type="image/png" href="favicon.png?v=2">
+<link rel="stylesheet" href="style.css">
+<script data-goatcounter="https://dortiz83.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <header class="app-header">
+    <a class="brand" href="app.html">
+      <img class="brand-logo-img" src="logo-brand.png" alt="SwissMsRecycle">
+    </a>
+    <div class="app-user">
+      <a href="app.html" class="btn btn-ghost btn-sm">← Back to board</a>
+    </div>
+  </header>
+
+  <div class="settings-page">
+    <h1 class="settings-title">Settings</h1>
+
+    <section class="post-card settings-card">
+      <h2>Your profile</h2>
+      <p class="settings-hint">Shown on the listings you post.</p>
+      <label for="s-full-name">Full name</label>
+      <input type="text" id="s-full-name">
+
+      <label for="s-organization">Company / university / group</label>
+      <input type="text" id="s-organization">
+
+      <label for="s-email">Email</label>
+      <input type="email" id="s-email" disabled>
+
+      <button class="btn btn-primary auth-submit" id="save-profile-btn">Save changes</button>
+      <p class="form-msg" id="profile-msg"></p>
+    </section>
+
+    <section class="post-card settings-card">
+      <h2>Change password</h2>
+      <label for="s-password">New password</label>
+      <input type="password" id="s-password" minlength="8" placeholder="At least 8 characters">
+      <ul class="pw-hints" id="pw-hints" style="display:block;">
+        <li id="hint-length">At least 8 characters</li>
+        <li id="hint-letter">At least one letter</li>
+        <li id="hint-number">At least one number</li>
+      </ul>
+      <label for="s-password2">Confirm new password</label>
+      <input type="password" id="s-password2" placeholder="Type it again">
+      <button class="btn btn-primary auth-submit" id="save-password-btn">Update password</button>
+      <p class="form-msg" id="password-msg"></p>
+    </section>
+
+    <section class="post-card settings-card settings-card--danger">
+      <h2>Delete my data</h2>
+      <p class="settings-hint">
+        This permanently removes every listing you've posted and your
+        profile information (name, organization), then signs you out.
+      </p>
+      <p class="settings-hint settings-hint--note">
+        Note: this does not delete your login itself (your email +
+        password will still exist in the system) — a static site like
+        this one can't safely do that without a backend admin key.
+        If you also want your login removed entirely, email
+        <a href="mailto:daniel.ortiz@epfl.ch">daniel.ortiz@epfl.ch</a>
+        and ask for it to be deleted manually.
+      </p>
+      <button class="btn btn-ghost btn-sm" id="delete-data-btn">Delete my listings &amp; profile</button>
+      <p class="form-msg" id="delete-msg"></p>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <span><span class="cap">S</span>wiss<span class="cap">M</span>s<span class="cap">R</span>ecycle</span>
+    <span>By and for the Swiss mass spectrometry community · <a href="terms.html">Terms &amp; privacy</a></span>
+  </footer>
+</div>
+
+<script type="module">
+  import { supabase } from './supabase-client.js'
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (!sessionData.session) {
+    window.location.href = 'login.html'
+  }
+  const currentUser = sessionData.session.user
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (!session) window.location.href = 'login.html'
+  })
+
+  document.getElementById('s-email').value = currentUser.email
+
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle()
+  if (profile) {
+    document.getElementById('s-full-name').value = profile.full_name || ''
+    document.getElementById('s-organization').value = profile.organization || ''
+  }
+
+  document.getElementById('save-profile-btn').addEventListener('click', async () => {
+    const msg = document.getElementById('profile-msg')
+    msg.className = 'form-msg'
+    msg.textContent = 'Saving…'
+    const { error } = await supabase.from('profiles').upsert({
+      id: currentUser.id,
+      full_name: document.getElementById('s-full-name').value.trim(),
+      organization: document.getElementById('s-organization').value.trim(),
+      email: currentUser.email
+    })
+    msg.className = error ? 'form-msg error' : 'form-msg ok'
+    msg.textContent = error ? error.message : 'Saved.'
+  })
+
+  const pwInput = document.getElementById('s-password')
+  pwInput.addEventListener('input', () => {
+    const v = pwInput.value
+    document.getElementById('hint-length').classList.toggle('met', v.length >= 8)
+    document.getElementById('hint-letter').classList.toggle('met', /[a-zA-Z]/.test(v))
+    document.getElementById('hint-number').classList.toggle('met', /[0-9]/.test(v))
+  })
+
+  document.getElementById('save-password-btn').addEventListener('click', async () => {
+    const msg = document.getElementById('password-msg')
+    const password = pwInput.value
+    const password2 = document.getElementById('s-password2').value
+    msg.className = 'form-msg'
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8) {
+      msg.className = 'form-msg error'
+      msg.textContent = 'Please meet all password requirements above.'
+      return
+    }
+    if (password !== password2) {
+      msg.className = 'form-msg error'
+      msg.textContent = "Passwords don't match."
+      return
+    }
+    msg.textContent = 'Updating…'
+    const { error } = await supabase.auth.updateUser({ password })
+    msg.className = error ? 'form-msg error' : 'form-msg ok'
+    msg.textContent = error ? error.message : 'Password updated.'
+    if (!error) { pwInput.value = ''; document.getElementById('s-password2').value = '' }
+  })
+
+  document.getElementById('delete-data-btn').addEventListener('click', async () => {
+    const msg = document.getElementById('delete-msg')
+    if (!confirm('This will permanently delete all your listings and profile info. Continue?')) return
+    msg.textContent = 'Deleting…'
+    await supabase.from('listings').delete().eq('user_id', currentUser.id)
+    await supabase.from('profiles').delete().eq('id', currentUser.id)
+    await supabase.auth.signOut()
+    window.location.href = 'index.html'
+  })
+</script>
+
+</body>
+</html>
