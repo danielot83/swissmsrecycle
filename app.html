@@ -449,7 +449,7 @@
         <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
         <div class="listing-row-title">
           <strong>${escapeHtml(item.title)}</strong>
-          <span class="listing-row-sub">${[item.category, [item.brand, item.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</span>
+          <span class="listing-row-sub">${[item.category, [item.brand, item.model].filter(Boolean).join(' '), item.organization].filter(Boolean).join(' · ')}</span>
         </div>
         <div class="listing-row-org">${escapeHtml(item.claimed_by)}</div>
         <div class="listing-row-condition">${formatDate(item.claimed_at)}</div>
