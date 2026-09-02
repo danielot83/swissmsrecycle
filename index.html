@@ -98,8 +98,20 @@
       <span><span class="cap">S</span>wiss<span class="cap">M</span>s<span class="cap">R</span>ecycle</span>
       <span>By and for the Swiss mass spectrometry community · <a href="terms.html">Terms &amp; privacy</a></span>
     </footer>
+    <p class="landing-counters" id="landing-counters"></p>
   </div>
 </div>
+
+<script type="module">
+  import { supabase } from './supabase-client.js'
+  try {
+    const { data } = await supabase.rpc('public_counts')
+    if (data) {
+      document.getElementById('landing-counters').textContent =
+        `${data.offers} available right now · ${data.requests} being looked for · ${data.exchanges} given away so far`
+    }
+  } catch {}
+</script>
 
 </body>
 </html>

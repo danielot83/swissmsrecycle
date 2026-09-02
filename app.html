@@ -44,6 +44,8 @@
     <button class="btn btn-accent app-primary-btn" id="open-post-btn">Offer or request something</button>
   </div>
 
+  <p class="app-counters" id="app-counters"></p>
+
   <div class="app-tabs">
     <button class="app-tab active" data-view="available">See what's available</button>
     <button class="app-tab" data-view="needed">See what's needed</button>
@@ -725,14 +727,25 @@
     }
   })
 
+  async function loadCounters() {
+    try {
+      const { data } = await supabase.rpc('public_counts')
+      if (data) {
+        document.getElementById('app-counters').textContent =
+          `${data.offers} available · ${data.requests} needed · ${data.exchanges} exchanged so far`
+      }
+    } catch {}
+  }
+
   // ---- Realtime ----
   supabase
     .channel('listings-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => { loadListings(); loadHistory() })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => { loadListings(); loadHistory(); loadCounters() })
     .subscribe()
 
   loadListings()
   loadHistory()
+  loadCounters()
 </script>
 
 </body>

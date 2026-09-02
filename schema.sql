@@ -54,6 +54,10 @@ create table if not exists listings (
   contact_email text,
   construction_year int,
   photo_url text,
+  inventory_number text,
+  inquiry_count int not null default 0,
+  claimed_by text,
+  claimed_at timestamptz,
   status text default 'open' check (status in ('open', 'closed'))
 );
 
@@ -69,6 +73,9 @@ alter table listings add column if not exists contact_email text;
 alter table listings add column if not exists construction_year int;
 alter table listings add column if not exists photo_url text;
 alter table listings add column if not exists inquiry_count int not null default 0;
+alter table listings add column if not exists inventory_number text;
+alter table listings add column if not exists claimed_by text;
+alter table listings add column if not exists claimed_at timestamptz;
 
 alter table listings enable row level security;
 
@@ -114,6 +121,24 @@ as $$
 $$;
 
 grant execute on function increment_inquiry(uuid) to authenticated;
+
+-- Public counts (for the landing page, visible to anyone, even signed
+-- out). Only returns numbers — never the listings themselves — so it's
+-- safe to expose without requiring a login.
+create or replace function public_counts()
+returns json
+language sql
+security definer
+set search_path = public
+as $$
+  select json_build_object(
+    'offers', (select count(*) from listings where status = 'open' and type = 'offer'),
+    'requests', (select count(*) from listings where status = 'open' and type = 'request'),
+    'exchanges', (select count(*) from listings where status = 'closed' and claimed_by is not null)
+  );
+$$;
+
+grant execute on function public_counts() to anon, authenticated;
 
 -- ---------- Storage bucket for listing photos ----------
 -- Run this part once. If it complains the bucket already exists,
