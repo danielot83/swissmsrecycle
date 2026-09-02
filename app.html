@@ -40,11 +40,24 @@
     <p class="app-hero-text">Browse what labs nearby are giving away or looking for, or post your own.</p>
   </div>
 
+  <div class="stats-row" id="stats-row">
+    <div class="stat-box">
+      <div class="stat-number" id="stat-offers">—</div>
+      <div class="stat-label">Available</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="stat-requests">—</div>
+      <div class="stat-label">Needed</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="stat-exchanges">—</div>
+      <div class="stat-label">Exchanged</div>
+    </div>
+  </div>
+
   <div class="app-primary-action">
     <button class="btn btn-accent app-primary-btn" id="open-post-btn">Offer or request something</button>
   </div>
-
-  <p class="app-counters" id="app-counters"></p>
 
   <div class="app-tabs">
     <button class="app-tab active" data-view="available">See what's available</button>
@@ -731,8 +744,9 @@
     try {
       const { data } = await supabase.rpc('public_counts')
       if (data) {
-        document.getElementById('app-counters').textContent =
-          `${data.offers} available · ${data.requests} needed · ${data.exchanges} exchanged so far`
+        document.getElementById('stat-offers').textContent = data.offers
+        document.getElementById('stat-requests').textContent = data.requests
+        document.getElementById('stat-exchanges').textContent = data.exchanges
       }
     } catch {}
   }

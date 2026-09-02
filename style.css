@@ -357,25 +357,56 @@ h1 {
   margin: 0;
 }
 
+/* ---------- Stats (big numbers in boxes) ---------- */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 28px 0;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 28px;
+  min-width: 110px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.stat-number {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+.app-hero .stats-row {
+  margin: 20px 0 8px;
+}
+
+.app-hero .stat-box {
+  padding: 12px 22px;
+  min-width: 90px;
+}
+
+.app-hero .stat-number {
+  font-size: 26px;
+}
+
 /* ---------- Footer ---------- */
-.landing-counters {
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-soft);
-  opacity: 0.7;
-  padding: 0 0 28px;
-  margin: 0;
-}
-
-.app-counters {
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin: 0 0 16px;
-}
-
 .footer {
   border-top: 1px solid var(--line);
   padding: 28px 0 48px;
