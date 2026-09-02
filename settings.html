@@ -56,20 +56,12 @@
     </section>
 
     <section class="post-card settings-card settings-card--danger">
-      <h2>Delete my data</h2>
+      <h2>Delete my account</h2>
       <p class="settings-hint">
-        This permanently removes every listing you've posted and your
-        profile information (name, organization), then signs you out.
+        This permanently deletes your login, every listing you've
+        posted, and your profile information. This cannot be undone.
       </p>
-      <p class="settings-hint settings-hint--note">
-        Note: this does not delete your login itself (your email +
-        password will still exist in the system) — a static site like
-        this one can't safely do that without a backend admin key.
-        If you also want your login removed entirely, email
-        <a href="mailto:daniel.ortiz@epfl.ch">daniel.ortiz@epfl.ch</a>
-        and ask for it to be deleted manually.
-      </p>
-      <button class="btn btn-ghost btn-sm" id="delete-data-btn">Delete my listings &amp; profile</button>
+      <button class="btn btn-ghost btn-sm" id="delete-data-btn">Delete my account</button>
       <p class="form-msg" id="delete-msg"></p>
     </section>
   </div>
@@ -147,10 +139,28 @@
 
   document.getElementById('delete-data-btn').addEventListener('click', async () => {
     const msg = document.getElementById('delete-msg')
-    if (!confirm('This will permanently delete all your listings and profile info. Continue?')) return
+    if (!confirm('This will permanently delete your account, your listings, and your profile. This cannot be undone. Continue?')) return
+    msg.className = 'form-msg'
     msg.textContent = 'Deleting…'
-    await supabase.from('listings').delete().eq('user_id', currentUser.id)
-    await supabase.from('profiles').delete().eq('id', currentUser.id)
+
+    const { data: sessionCheck } = await supabase.auth.getSession()
+    const { data, error } = await supabase.functions.invoke('delete-account', {
+      headers: { Authorization: `Bearer ${sessionCheck.session.access_token}` }
+    })
+
+    if (error || data?.error) {
+      // Fallback: the account-deletion function isn't set up yet on
+      // this project. Still clear the person's data and sign them out,
+      // and tell them the login itself needs a manual step for now.
+      await supabase.from('listings').delete().eq('user_id', currentUser.id)
+      await supabase.from('profiles').delete().eq('id', currentUser.id)
+      await supabase.auth.signOut()
+      msg.className = 'form-msg error'
+      msg.textContent = 'Your data was deleted, but the account itself could not be removed automatically. Email daniel.ortiz@epfl.ch to finish closing it.'
+      setTimeout(() => { window.location.href = 'index.html' }, 3000)
+      return
+    }
+
     await supabase.auth.signOut()
     window.location.href = 'index.html'
   })
