@@ -476,9 +476,13 @@
     const mailto = `mailto:${encodeURIComponent(item.contact_email || '')}?subject=${encodeURIComponent('SwissMsRecycle: ' + item.title)}`
 
     modalBody.innerHTML = `
-      ${item.photo_url ? `<img class="modal-photo" src="${item.photo_url}" alt="">` : ''}
-      <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
-      <h2>${escapeHtml(item.title)}</h2>
+      <div class="modal-head">
+        ${item.photo_url ? `<img class="modal-photo" src="${item.photo_url}" alt="">` : ''}
+        <div class="modal-head-text">
+          <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
+          <h2>${escapeHtml(item.title)}</h2>
+        </div>
+      </div>
       ${item.description ? `<p class="modal-desc">${escapeHtml(item.description)}</p>` : ''}
       <dl class="modal-details">
         ${item.category ? `<dt>Category</dt><dd>${escapeHtml(item.category)}</dd>` : ''}
@@ -500,8 +504,10 @@
       </div>
       <p class="listing-inquiry-count" id="inquiry-count">${item.inquiry_count ? `Asked ${item.inquiry_count} time${item.inquiry_count === 1 ? '' : 's'} so far` : ''}</p>
       <div id="mark-given-form" style="display:none;">
-        <label for="claimed-by-input">Who took it?</label>
+        <label for="claimed-by-input">Lab / university / group it went to</label>
         <input type="text" id="claimed-by-input" placeholder="e.g. Proteomics Core, Uni Bern">
+        <label for="claimed-at-input">Date</label>
+        <input type="date" id="claimed-at-input">
         <button class="btn btn-primary btn-sm" id="confirm-given-btn" type="button">Confirm</button>
       </div>
       <p class="form-msg" id="modal-msg"></p>
@@ -528,16 +534,18 @@
 
     document.getElementById('mark-given-btn')?.addEventListener('click', () => {
       document.getElementById('mark-given-form').style.display = 'block'
+      document.getElementById('claimed-at-input').value = new Date().toISOString().slice(0, 10)
       document.getElementById('claimed-by-input').focus()
     })
 
     document.getElementById('confirm-given-btn')?.addEventListener('click', async () => {
       const claimedBy = document.getElementById('claimed-by-input').value.trim()
+      const claimedAtDate = document.getElementById('claimed-at-input').value
       if (!claimedBy) return
       const { error } = await supabase.from('listings').update({
         status: 'closed',
         claimed_by: claimedBy,
-        claimed_at: new Date().toISOString()
+        claimed_at: claimedAtDate ? new Date(claimedAtDate).toISOString() : new Date().toISOString()
       }).eq('id', item.id)
       if (!error) {
         modal.style.display = 'none'

@@ -890,18 +890,35 @@ input[type="file"] {
   color: var(--ink-soft);
 }
 
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
 .modal-photo {
-  width: 100%;
+  width: 76px;
+  height: 76px;
   border-radius: 8px;
-  margin-bottom: 14px;
-  max-height: 220px;
   object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+}
+
+.modal-head-text {
+  min-width: 0;
+}
+
+.modal-head-text .tag {
+  margin-bottom: 6px;
 }
 
 .modal-card h2 {
   font-family: var(--font-display);
-  font-size: 20px;
-  margin: 10px 0 8px;
+  font-size: 19px;
+  margin: 0;
+  line-height: 1.25;
 }
 
 .modal-desc {
