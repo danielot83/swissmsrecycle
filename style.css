@@ -617,6 +617,7 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 20px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -624,10 +625,16 @@ input:focus, textarea:focus, select:focus {
 .app-user {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  #user-email { display: none; }
+  .brand-logo-img { height: 26px; }
 }
 
 /* ---------- App tabs ---------- */
@@ -739,6 +746,15 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   gap: 8px;
   margin: 0 0 20px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .app-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex: 1 1 auto;
+  }
 }
 
 .app-tab {
