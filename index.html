@@ -28,10 +28,17 @@
             <circle r="5" cy="50" fill="var(--offer)"><animateMotion path="M15 0 L85 0" dur="1.6s" begin="-0.5s" repeatCount="indefinite"/></circle>
             <circle r="4" cy="50" fill="var(--ion-blue)"><animateMotion path="M15 0 L85 0" dur="1.6s" begin="-1s" repeatCount="indefinite"/></circle>
           </svg>
-          <svg class="ion-overlay ion-overlay--tower" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse rx="3.25" ry="0.94" fill="var(--accent)"><animateMotion path="M70 96 L70 22 Q70 4 45 4 L45 28" dur="2s" repeatCount="indefinite"/></ellipse>
-            <ellipse rx="2.71" ry="0.79" fill="var(--offer)"><animateMotion path="M70 96 L70 22 Q70 4 45 4 L45 28" dur="2s" begin="-0.7s" repeatCount="indefinite"/></ellipse>
-            <ellipse rx="2.17" ry="0.63" fill="var(--ion-blue)"><animateMotion path="M70 96 L70 22 Q70 4 45 4 L45 28" dur="2s" begin="-1.4s" repeatCount="indefinite"/></ellipse>
+          <svg class="ion-overlay ion-overlay--tower" viewBox="0 0 165 1005" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <clipPath id="tower-window-clip">
+                <path d="M0,185 L0,60 Q3,25 50,3 Q85,-3 123,2 Q158,8 165,35 L163,600 L162,985 Q160,1000 120,1005 Q95,1006 87,990 L83,600 L83,228 Q60,210 40,200 Q10,195 0,185 Z"/>
+              </clipPath>
+            </defs>
+            <g clip-path="url(#tower-window-clip)">
+              <circle r="5" fill="var(--accent)"><animateMotion path="M123 970 L123 250 Q100 195 80 175 L80 60 Q80 15 85 5" dur="2s" repeatCount="indefinite"/></circle>
+              <circle r="4.2" fill="var(--offer)"><animateMotion path="M123 970 L123 250 Q100 195 80 175 L80 60 Q80 15 85 5" dur="2s" begin="-0.7s" repeatCount="indefinite"/></circle>
+              <circle r="3.4" fill="var(--ion-blue)"><animateMotion path="M123 970 L123 250 Q100 195 80 175 L80 60 Q80 15 85 5" dur="2s" begin="-1.4s" repeatCount="indefinite"/></circle>
+            </g>
           </svg>
         </div>
         <span class="eyebrow">Created by the Swiss MS community</span>
