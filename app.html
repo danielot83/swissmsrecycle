@@ -256,6 +256,25 @@
   // load (or lazily create) this user's profile, and prefill the post form's contact email
   const { data: profileData } = await supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle()
   currentProfile = profileData
+
+  // First real login after a confirmed signup: there was no session yet
+  // at signup time, so the profile row never got created then. Recover
+  // the name/organization from the account metadata (saved regardless
+  // of confirmation) and create the profile row now that we do have a
+  // session.
+  if (!currentProfile) {
+    const meta = currentUser.user_metadata || {}
+    if (meta.full_name || meta.organization) {
+      await supabase.from('profiles').upsert({
+        id: currentUser.id,
+        full_name: meta.full_name || '',
+        organization: meta.organization || '',
+        email: currentUser.email
+      })
+      currentProfile = { full_name: meta.full_name || '', organization: meta.organization || '', email: currentUser.email }
+    }
+  }
+
   document.getElementById('contact_email').value = currentUser.email
   if (currentProfile?.organization) {
     document.getElementById('organization').value = currentProfile.organization

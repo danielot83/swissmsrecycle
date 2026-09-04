@@ -91,6 +91,14 @@
   if (profile) {
     document.getElementById('s-full-name').value = profile.full_name || ''
     document.getElementById('s-organization').value = profile.organization || ''
+  } else {
+    // Recover name/organization saved at signup time (in the account
+    // metadata) if the profile row was never created — this happens
+    // when email confirmation is on, since there's no session yet at
+    // the moment of signing up to save the profile row directly.
+    const meta = currentUser.user_metadata || {}
+    document.getElementById('s-full-name').value = meta.full_name || ''
+    document.getElementById('s-organization').value = meta.organization || ''
   }
 
   document.getElementById('save-profile-btn').addEventListener('click', async () => {
