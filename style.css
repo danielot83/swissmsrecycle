@@ -245,6 +245,13 @@ h1 {
   max-width: 31ch;
 }
 
+.underline-accent {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
 .highlight {
   position: relative;
   display: inline-block;
