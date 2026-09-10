@@ -891,6 +891,15 @@ input:focus, textarea:focus, select:focus {
   text-overflow: ellipsis;
 }
 
+.listing-row-desc {
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 .listing-row-org,
 .listing-row-condition {
   font-size: 13px;
@@ -950,6 +959,45 @@ input[type="file"] {
   width: 100%;
   padding: 10px 0;
   font-size: 13px;
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.photo-preview img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.photo-preview-extra {
+  font-size: 12px;
+  color: var(--ink-soft);
+  align-self: center;
+}
+
+.modal-gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 14px;
+  padding-bottom: 2px;
+}
+
+.modal-gallery img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 /* ---------- Detail modal ---------- */

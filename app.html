@@ -202,8 +202,9 @@
         <label for="contact_email">Contact email</label>
         <input type="email" id="contact_email" placeholder="name@institution.ch">
 
-        <label for="photo">Photo (optional — auto-cropped to a 300×300 square)</label>
-        <input type="file" id="photo" accept="image/*">
+        <label for="photo">Photos (optional — up to 6, auto-cropped to 300×300 squares)</label>
+        <input type="file" id="photo" accept="image/*" multiple>
+        <div id="photo-preview" class="photo-preview"></div>
 
         <button type="submit" class="btn btn-primary auth-submit">Post to the board</button>
         <p class="form-msg" id="post-msg"></p>
@@ -430,6 +431,7 @@
         <div class="listing-row-title">
           <strong>${escapeHtml(item.title)}</strong>
           <span class="listing-row-sub">${[item.category, [item.brand, item.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</span>
+          ${item.description ? `<span class="listing-row-desc">${escapeHtml(item.description)}</span>` : ''}
         </div>
         <div class="listing-row-org">${escapeHtml(item.organization || '—')}</div>
         <div class="listing-row-condition">${escapeHtml(item.condition || '—')}</div>
@@ -515,15 +517,17 @@
     if (!item) return
 
     const mailto = `mailto:${encodeURIComponent(item.contact_email || '')}?subject=${encodeURIComponent('SwissMsRecycle: ' + item.title)}`
+    const photos = (item.photo_urls && item.photo_urls.length) ? item.photo_urls : (item.photo_url ? [item.photo_url] : [])
 
     modalBody.innerHTML = `
       <div class="modal-head">
-        ${item.photo_url ? `<img class="modal-photo" src="${item.photo_url}" alt="">` : ''}
+        ${photos[0] ? `<img class="modal-photo" id="modal-main-photo" src="${photos[0]}" alt="">` : ''}
         <div class="modal-head-text">
           <span class="tag ${item.type === 'offer' ? 'tag-offer' : 'tag-request'}">${item.type === 'offer' ? 'Offer' : 'Request'}</span>
           <h2>${escapeHtml(item.title)}</h2>
         </div>
       </div>
+      ${photos.length > 1 ? `<div class="modal-gallery">${photos.map(url => `<img src="${url}" alt="" class="modal-gallery-thumb">`).join('')}</div>` : ''}
       ${item.description ? `<p class="modal-desc">${escapeHtml(item.description)}</p>` : ''}
       <dl class="modal-details">
         ${item.category ? `<dt>Category</dt><dd>${escapeHtml(item.category)}</dd>` : ''}
@@ -553,6 +557,12 @@
       </div>
       <p class="form-msg" id="modal-msg"></p>
     `
+
+    modalBody.querySelectorAll('.modal-gallery-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        document.getElementById('modal-main-photo').src = thumb.src
+      })
+    })
 
     const copyBtn = document.getElementById('copy-email-btn')
     copyBtn?.addEventListener('click', async () => {
@@ -684,6 +694,18 @@
     return modelTextInput.value.trim() || null
   }
 
+  document.getElementById('photo').addEventListener('change', (e) => {
+    const preview = document.getElementById('photo-preview')
+    const files = Array.from(e.target.files).slice(0, 6)
+    if (files.length > 6) {
+      // the input itself keeps everything selected, but we only use the first 6
+    }
+    preview.innerHTML = files.map(f => `<img src="${URL.createObjectURL(f)}" alt="">`).join('')
+    if (e.target.files.length > 6) {
+      preview.innerHTML += `<span class="photo-preview-extra">+${e.target.files.length - 6} more won't be used (max 6)</span>`
+    }
+  })
+
   // Resize/crop any photo down to a clean 300x300 square before it
   // ever leaves the browser — keeps every listing's thumbnail the
   // same size and shape, and keeps uploads small.
@@ -720,19 +742,25 @@
     postMsg.className = 'form-msg'
     postMsg.textContent = 'Posting…'
 
-    const photoFile = document.getElementById('photo').files[0]
+    const photoFiles = Array.from(document.getElementById('photo').files).slice(0, 6)
     let photo_url = null
+    let photo_urls = null
 
     try {
-      if (photoFile) {
-        const squarePhoto = await resizeImageToSquare(photoFile, 300)
-        const path = `${currentUser.id}/${Date.now()}.jpg`
-        const { error: uploadError } = await supabase.storage
-          .from('listing-photos')
-          .upload(path, squarePhoto, { contentType: 'image/jpeg' })
-        if (uploadError) throw uploadError
-        const { data: pub } = supabase.storage.from('listing-photos').getPublicUrl(path)
-        photo_url = pub.publicUrl
+      if (photoFiles.length) {
+        const uploadedUrls = []
+        for (const file of photoFiles) {
+          const squarePhoto = await resizeImageToSquare(file, 300)
+          const path = `${currentUser.id}/${Date.now()}-${uploadedUrls.length}.jpg`
+          const { error: uploadError } = await supabase.storage
+            .from('listing-photos')
+            .upload(path, squarePhoto, { contentType: 'image/jpeg' })
+          if (uploadError) throw uploadError
+          const { data: pub } = supabase.storage.from('listing-photos').getPublicUrl(path)
+          uploadedUrls.push(pub.publicUrl)
+        }
+        photo_url = uploadedUrls[0]
+        photo_urls = uploadedUrls
       }
 
       const { error } = await supabase.from('listings').insert({
@@ -749,12 +777,14 @@
         contact_email: document.getElementById('contact_email').value.trim(),
         construction_year: postType === 'offer' ? (document.getElementById('construction_year').value || null) : null,
         inventory_number: postType === 'offer' ? (document.getElementById('inventory_number').value.trim() || null) : null,
-        photo_url
+        photo_url,
+        photo_urls
       })
       if (error) throw error
 
       postForm.reset()
       refreshPostBrands()
+      document.getElementById('photo-preview').innerHTML = ''
       document.getElementById('contact_email').value = currentUser.email
       postMsg.className = 'form-msg ok'
       postMsg.textContent = 'Posted to the board.'
